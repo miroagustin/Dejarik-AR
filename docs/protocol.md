@@ -32,7 +32,7 @@ La casilla `12+k` queda detrás de la `k`. La geometría está en [board_spec.js
 
 - La cámara virtual queda fija en el origen.
 - El grupo `board` recibe `T` con `matrixAutoUpdate = false` y `matrixWorldNeedsUpdate = true` después de cada pose.
-- Dentro de `board` hay un grupo `boardY` rotado −90° en X, una sola vez, porque el tablero tiene Z hacia arriba y glTF tiene Y hacia arriba. Las criaturas cuelgan de `boardY`.
+- Dentro de `board` hay un grupo `boardY` rotado **+90° en X** (`rotation.x = Math.PI / 2`), una sola vez, porque el tablero tiene Z hacia arriba y glTF tiene Y hacia arriba: así +Y del glTF va a +Z del tablero. Las criaturas cuelgan de `boardY`. Un punto `(x, y)` del tablero es `(x, 0, -y)` en `boardY`. (Corregido el día 2: decía −90°, que acuesta a las criaturas hacia abajo.)
 - **Proyección.** `camera.projectionMatrix` se arma con `K = [fx, fy, cx, cy]`, `size = [w, h]`, `near = 0.01` y `far = 10`. No se llama a `updateProjectionMatrix()`, y hay que actualizar `projectionMatrixInverse` a mano. En orden por filas:
 
   ```text

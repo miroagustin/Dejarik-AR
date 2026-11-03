@@ -68,6 +68,19 @@ python tools/fake_session.py   # genera fixtures/session_01.dj
 
 Son 90 cuadros sintéticos del tablero, con la pose real en el header. El formato está en [docs/protocol.md](docs/protocol.md).
 
+## Probar el render sin cámara ni juego
+
+Mientras no existan `transport.py` y `game.py`, hay un servidor de desarrollo:
+
+```powershell
+python tools/dev_server.py                # reproduce fixtures/session_01.dj
+python tools/dev_server.py --autoplay     # además juega solo una partida guionada
+```
+
+- Abrir `http://127.0.0.1:8000/?p=0`. Cada clic avanza la partida guionada (mover, atacar, golpe, contragolpe, muerte). `R` la reinicia y `D` muestra el overlay de debug.
+- **Visor de criaturas:** `http://127.0.0.1:8000/?viewer=bestia` (o `guardian`, `acechador`, `soldado`). Agregar `&side=1` la muestra en rojo y `&still=1` la deja quieta.
+- **Ajustes visuales:** el oscurecimiento del video está en `BACKGROUND_DIM` (`web/scene.js`). Las scanlines y el parpadeo están en `holoUniforms` (`web/hologram.js`). Se ajustan mirando la pantalla compartida en Teams.
+
 ## Tests
 
 ```powershell

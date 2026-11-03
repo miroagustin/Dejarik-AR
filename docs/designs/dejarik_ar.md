@@ -336,7 +336,7 @@ El `frame_bus` es una variable protegida por un lock que guarda **solo el últim
 *   **Three.js:**
     *   La cámara virtual queda fija en el origen.
     *   El grupo `board` recibe `T_view` con `matrixAutoUpdate = false`.
-    *   Como el tablero tiene Z hacia arriba y glTF tiene Y hacia arriba, dentro de `board` hay un grupo hijo `boardY` rotado −90° en X, una sola vez. Las criaturas cuelgan de `boardY`.
+    *   Como el tablero tiene Z hacia arriba y glTF tiene Y hacia arriba, dentro de `board` hay un grupo hijo `boardY` rotado +90° en X (corregido el día 2; −90° acostaba las criaturas), una sola vez. Las criaturas cuelgan de `boardY`.
 *   **Proyección.** `camera.projectionMatrix` se escribe a partir de K, el ancho, el alto, `near = 0.01` y `far = 10`. No se llama a `updateProjectionMatrix`. Se actualiza `projectionMatrixInverse` a mano.
 *   **Canvas.** Tiene la misma relación de aspecto que el cuadro (16:9), con bandas negras si hace falta, sin recortar.
 

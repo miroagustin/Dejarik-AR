@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Dejarik AR</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+    { "imports": {
+        "three": "./vendor/three/build/three.module.js",
+        "three/addons/": "./vendor/three/examples/jsm/"
+    } }
+  </script>
+</head>
+<body>
+  <div id="stage">
+    <canvas id="gl"></canvas>
+    <canvas id="debug"></canvas>
+  </div>
+  <div id="hud">
+    <div id="turn"></div>
+    <div id="role"></div>
+    <div id="roster"></div>
+    <div id="combat"></div>
+    <div id="notice"></div>
+    <div id="remote"></div>
+  </div>
+  <div id="banner"></div>
+  <div id="viewer-ui"></div>
+  <div id="errors"></div>
+  <script>
+    // Los errores quedan a la vista (sirve en las capturas headless y en el ensayo).
+    window.addEventListener("error", e => { document.getElementById("errors").textContent += e.message + "\n"; });
+    window.addEventListener("unhandledrejection", e => { document.getElementById("errors").textContent += e.reason + "\n"; });
+  </script>
+  <script type="module" src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+:root {
+  --blue: #4cc9ff;
+  --red: #ff5a4c;
+  --hud-bg: rgba(0, 12, 24, 0.72);
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: #000;
+  color: #cdefff;
+  font-family: "Consolas", "Courier New", monospace;
+  overflow: hidden;
+}
+
+/* El canvas mantiene el aspecto del cuadro; main.js lo centra con bandas negras. */
+#stage { position: absolute; }
+#gl, #debug { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+#debug { pointer-events: none; display: none; }
+#debug.on { display: block; }
+
+#hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  text-shadow: 0 0 6px currentColor;
+}
+#hud > div { position: absolute; padding: 6px 12px; background: var(--hud-bg); border-radius: 4px; }
+#hud > div:empty { display: none; }
+#turn { top: 12px; left: 50%; transform: translateX(-50%); font-size: 26px; letter-spacing: 2px; }
+#role { top: 12px; left: 12px; font-size: 15px; }
+#roster { top: 64px; left: 12px; font-size: 14px; line-height: 1.5; }
+#combat { bottom: 18px; left: 50%; transform: translateX(-50%); font-size: 20px; }
+#notice { top: 60px; left: 50%; transform: translateX(-50%); font-size: 18px; color: #ffd36b; }
+#remote { top: 12px; right: 12px; font-size: 13px; max-width: 40%; word-break: break-all; pointer-events: auto; }
+#remote button { pointer-events: auto; margin-left: 6px; }
+
+.p0 { color: var(--blue); }
+.p1 { color: var(--red); }
+.dead { opacity: 0.35; text-decoration: line-through; }
+.hp { display: inline-block; height: 7px; margin-left: 6px; background: currentColor; vertical-align: middle; }
+
+#banner {
+  position: absolute; inset: 0; display: none;
+  align-items: center; justify-content: center;
+  font-size: 64px; letter-spacing: 6px; text-shadow: 0 0 24px currentColor;
+  background: rgba(0, 0, 0, 0.45);
+}
+#banner.on { display: flex; }
+
+#viewer-ui { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); }
+#viewer-ui button {
+  margin: 0 4px; padding: 6px 14px; font: inherit; color: var(--blue);
+  background: var(--hud-bg); border: 1px solid var(--blue); border-radius: 4px; cursor: pointer;
+}
+
+#errors { position: absolute; bottom: 0; left: 0; color: #f66; white-space: pre; font-size: 12px; }

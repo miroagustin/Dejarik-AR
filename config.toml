@@ -59,4 +59,6 @@ seed = 1
 anim_timeout_s = 5
 
 [browser]
+# Chrome o Edge (los dos son Chromium y aceptan los mismos flags). Ajustar a la PC del anfitrión.
 chrome_path = "C:/Program Files/Google/Chrome/Application/chrome.exe"
+# chrome_path = "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
