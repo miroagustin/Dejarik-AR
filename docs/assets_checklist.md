@@ -16,6 +16,7 @@ Un archivo por tipo: `web/assets/creatures/{guardian,bestia,acechador,soldado}.g
 - [ ] Formato `.glb` (glTF binario), **sin Draco**, de **menos de 5 MB**.
 - [ ] +Y hacia arriba, 1 unidad = 1 m.
 - [ ] Altura de **0,05 a 0,07 m**. Si viene de un FBX, revisar la escala de importación: suele ser 0,01.
+- [ ] **La base entra en un cuadrado de 25 × 25 mm centrado en el origen (X y Z, en reposo).** Una casilla del anillo interno mide 28 mm de ancho en el medio, así que una criatura más larga se mete en las casillas vecinas. Tiene que ser **compacta y alta**, no más chica: cola enroscada, patas juntas, postura erguida.
 - [ ] Mira hacia **+Z**. El origen está en la base, entre las patas.
 
 **Animación**
@@ -53,6 +54,10 @@ keyframes; (3) animación de la pieza entera.
 Contrato de salida (obligatorio):
 - Exportar .glb sin Draco, menos de 5 MB, +Y hacia arriba, 1 unidad = 1 m.
 - Altura entre 0,05 y 0,07 m. Mirando hacia +Z. Origen en la base.
+- En reposo, la base (X y Z) entra en un cuadrado de 25 x 25 mm centrado en el
+  origen. Criatura compacta y alta: cola enroscada, patas juntas, postura erguida.
+  Si te pasás, cambiá la pose o las proporciones; no la achiques.
+- Antes de entregar, verificá con: python tools/check_glb.py <archivo>.glb
 - Clips con estos nombres exactos: idle, walk, attack, hit, die.
   idle y walk hacen loop; walk sin desplazamiento.
 - Un solo esqueleto, o ninguno si es animación por objeto.

@@ -918,7 +918,7 @@ Hoy el repo solo tiene `Dejarik_AR_Brief.pdf`, `concepts_brief.md` y este docume
 *   **Tipo:** especificación de los modelos. Es también el prompt base para la IA que opera Blender a través del MCP de Blender.
 *   **Cambios:**
     *   **Contrato de salida**, que es lo mismo que verifica `tools/check_glb.py`:
-        *   `.glb`, +Y hacia arriba, 1 unidad = 1 m, altura de 0,05 a 0,07 m;
+        *   `.glb`, +Y hacia arriba, 1 unidad = 1 m, altura de 0,05 a 0,07 m, y la base (X y Z, en reposo) entra en un cuadrado de 25 × 25 mm centrado en el origen, porque una casilla del anillo interno mide 28 mm de ancho;
         *   menos de 5 MB, sin Draco;
         *   un solo esqueleto, o animación por objeto si la criatura es rígida;
         *   clips llamados exactamente `idle|walk|attack|hit|die`; `idle` y `walk` deben hacer loop sin saltos;
@@ -1221,7 +1221,7 @@ Hoy el repo solo tiene `Dejarik_AR_Brief.pdf`, `concepts_brief.md` y este docume
         *   que no use Draco;
         *   que estén los 5 nombres de clip;
         *   que haya un solo esqueleto, o ninguno con animación por objeto;
-        *   la altura a partir de los `min/max` de los accessors de posición;
+        *   la altura, la base de 25 × 25 mm y que el origen esté en la base, a partir de los `min/max` de los accessors de posición transformados por la jerarquía de nodos (y, en mallas con esqueleto, por el primer hueso y su inverse bind matrix);
     *   termina con código 1 y un mensaje concreto por cada falla. Ese mensaje es el que se le devuelve a la IA.
 *   **Por qué:** el criterio de aceptación tiene que ser mecánico, porque el que produce los modelos no es una persona.
 
