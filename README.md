@@ -79,6 +79,7 @@ python tools/dev_server.py --autoplay     # además juega solo una partida guion
 
 - Abrir `http://127.0.0.1:8000/?p=0`. Cada clic avanza la partida guionada (mover, atacar, golpe, contragolpe, muerte). `R` la reinicia y `D` muestra el overlay de debug.
 - **Visor de criaturas:** `http://127.0.0.1:8000/?viewer=bestia` (o `guardian`, `acechador`, `soldado`). Agregar `&side=1` la muestra en rojo y `&still=1` la deja quieta.
+- **Sonido:** se genera en el navegador (`web/audio.js`, sin archivos). Suena desde el primer clic o tecla. `M` silencia. `http://127.0.0.1:8000/?soundcheck` muestra el volumen pico de cada sonido; si alguno dice MUDO, está roto. En Teams hay que activar "compartir audio del sistema".
 - **Ajustes visuales:** el oscurecimiento del video está en `BACKGROUND_DIM` (`web/scene.js`). Las scanlines y el parpadeo están en `holoUniforms` (`web/hologram.js`). Se ajustan mirando la pantalla compartida en Teams.
 
 ## Tests
@@ -92,7 +93,7 @@ pytest -q
 - **Correr el juego:**
   - `python -m dejarik --mode cpu|local|remote`
   - Flags: `--input mouse|hand|both`, `--replay`, `--record`, `--resume` y `--no-browser`.
-  - Teclas: `D` overlay de debug, `L` bloquear la pose, `R` reiniciar, `P` cambiar de modo.
+  - Teclas: `D` overlay de debug, `L` bloquear la pose, `R` reiniciar, `P` cambiar de modo, `M` silenciar.
 - **Modo remoto:**
   - Descargar `cloudflared.exe` (de github.com/cloudflare/cloudflared, sección Releases) en `tools/bin/`.
   - No debe existir `%USERPROFILE%\.cloudflared\config.yml`.

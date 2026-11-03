@@ -6,6 +6,7 @@ import { holoUniforms } from "./hologram.js";
 import { createEventQueue } from "./events.js";
 import { createHud } from "./hud.js";
 import { createDebug } from "./debug.js";
+import { createAudio } from "./audio.js";
 
 const params = new URLSearchParams(location.search);
 const glCanvas = document.getElementById("gl");
@@ -26,11 +27,12 @@ async function runGame() {
   const army = new Army(view.boardY, models, spec);
   const hud = createHud();
   const debug = createDebug(document.getElementById("debug"));
+  const audio = createAudio();
 
-  let you = 0, lastHeader = null, legal = [], selectedCell = null, poseAlpha = 1, aspect = 16 / 9;
-  let net = null;
+  let you = 0, lastHeader = null, legal = [], selectedCell = null, selectedId = null, poseAlpha = 1, aspect = 16 / 9;
+  let booted = false, net = null;
   const events = createEventQueue({
-    army, spec, hud,
+    army, spec, hud, audio,
     onDone: id => { if (you === 0) net.send({ type: "anim_done", id }); },
   });
 
@@ -46,12 +48,15 @@ async function runGame() {
       if (msg.winner == null) hud.clearWin(); else hud.win(msg.winner);
       legal = msg.legal ?? [];
       selectedCell = msg.pieces.find(p => p.id === msg.selected)?.cell ?? null;
+      if (msg.selected != null && msg.selected !== selectedId) audio.play("select");
+      selectedId = msg.selected;
     },
     events(msg) { events.push(msg.events); },
-    denied(msg) { hud.notice(msg.reason === "not_your_turn" ? "No es tu turno" : "Esperá a que termine la animación"); },
+    denied(msg) { audio.play("denied"); hud.notice(msg.reason === "not_your_turn" ? "No es tu turno" : "Esperá a que termine la animación"); },
     async frame(header, jpeg) {
       await view.setFrame(header, jpeg);
       lastHeader = header;
+      if (!booted && header.pose.ok) { booted = true; audio.play("boot"); audio.startHum(); }
       const a = header.size[0] / header.size[1];
       if (Math.abs(a - aspect) > 1e-3) { aspect = a; layout(view.renderer, aspect); }
       if (you === 1) net.send({ type: "frame_ack", frame_id: header.frame_id });
@@ -59,12 +64,15 @@ async function runGame() {
     onStatus(text) { hud.notice(text, text === "conectado" ? 1000 : 0); },
   });
 
+  addEventListener("pointerdown", () => audio.unlock());
   glCanvas.addEventListener("click", ev => {
     const p = view.boardPointFromClick(ev.clientX, ev.clientY);
     if (p) net.send({ type: "click", x: p.x, y: p.y });
   });
 
   addEventListener("keydown", ev => {
+    audio.unlock();
+    if (ev.key.toLowerCase() === "m") { hud.notice(audio.toggleMute() ? "Sonido apagado" : "Sonido encendido"); return; }
     const key = { d: "debug", l: "lock", r: "reset", p: "mode" }[ev.key.toLowerCase()];
     if (!key) return;
     if (key === "debug") debug.toggle();
@@ -139,5 +147,21 @@ async function runViewer(kind) {
   });
 }
 
+// ?soundcheck: renderiza cada sonido sin parlantes y muestra su pico. Si alguno da 0, está roto.
+async function runSoundcheck() {
+  const out = [];
+  for (const name of createAudio(new OfflineAudioContext(1, 48000, 48000)).names) {
+    const ctx = new OfflineAudioContext(1, 48000 * 2, 48000);
+    createAudio(ctx).play(name);
+    const data = (await ctx.startRendering()).getChannelData(0);
+    let peak = 0;
+    for (const v of data) peak = Math.max(peak, Math.abs(v));
+    out.push(`${name.padEnd(8)} pico ${peak.toFixed(3)} ${peak > 0.01 ? "OK" : "MUDO"}`);
+  }
+  document.getElementById("errors").style.color = "#7fffb0";
+  document.getElementById("errors").textContent = out.join("\n");
+}
+
 if (params.has("viewer")) runViewer(params.get("viewer"));
+else if (params.has("soundcheck")) runSoundcheck();
 else runGame();

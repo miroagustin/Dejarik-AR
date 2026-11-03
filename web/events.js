@@ -3,7 +3,7 @@
 import { cellCenter } from "./scene.js";
 import { tween } from "./creatures.js";
 
-export function createEventQueue({ army, spec, hud, onDone }) {
+export function createEventQueue({ army, spec, hud, audio, onDone }) {
   const queue = [];
   let running = false;
 
@@ -11,18 +11,22 @@ export function createEventQueue({ army, spec, hud, onDone }) {
     async move(e) {
       const c = army.get(e.piece);
       if (!c) return;
-      await c.walkTo(...cellCenter(spec, e.to));
+      const steps = setInterval(() => audio.play("step"), 260);
+      try { await c.walkTo(...cellCenter(spec, e.to)); } finally { clearInterval(steps); }
       c.cell = e.to;
     },
 
     async attack(e) {
       const c = army.get(e.piece);
+      audio.play("dice");
+      await new Promise(r => setTimeout(r, 550)); // que se escuche el dado antes del resultado
       hud.combat(e);
       if (!c) return;
       c.face(...cellCenter(spec, e.to));
       // el defensor mira al atacante
       const target = [...army.byId.values()].find(o => o.cell === e.to);
       target?.face(...cellCenter(spec, c.cell));
+      audio.play("attack");
       await c.play("attack");
       c.play("idle");
     },
@@ -30,6 +34,7 @@ export function createEventQueue({ army, spec, hud, onDone }) {
     async hit(e) {
       const c = army.get(e.piece);
       hud.hp(e.piece, e.result.hp);
+      audio.play("hit");
       if (!c) return;
       const anim = c.play("hit");
       await tween(0.35, t => c.setFlash(t < 0.3 ? t / 0.3 : (1 - t) / 0.7));
@@ -40,6 +45,7 @@ export function createEventQueue({ army, spec, hud, onDone }) {
 
     async death(e) {
       const c = army.get(e.piece);
+      audio.play("death");
       if (!c) return;
       await c.play("die");
       await tween(0.6, t => c.setOpacity(1 - t));
@@ -47,9 +53,9 @@ export function createEventQueue({ army, spec, hud, onDone }) {
       army.byId.delete(e.piece);
     },
 
-    async turn(e) { hud.turn(e.result.turn); },
+    async turn(e) { hud.turn(e.result.turn); audio.play("turn"); },
 
-    async win(e) { hud.win(e.result.winner); },
+    async win(e) { hud.win(e.result.winner); audio.play("win"); },
   };
 
   async function pump() {

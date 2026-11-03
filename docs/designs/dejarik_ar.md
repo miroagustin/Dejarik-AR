@@ -475,7 +475,7 @@ header = {"v":1,"type":"frame","frame_id":int,"t":ms,
     *   los clips se llaman exactamente `idle`, `walk`, `attack`, `hit` y `die`;
     *   el material de holograma es un `MeshBasicMaterial` extendido con `onBeforeCompile` (así trae el esqueleto) con brillo de borde (fresnel), scanlines, parpadeo y mezcla aditiva, teñido de rojo o azul según el bando.
 *   **Cola de eventos.** Los eventos se reproducen de a uno y en orden: caminar hasta la casilla, atacar, golpe con destello y sacudida, morir con disolución y partículas. Al terminar cada uno se manda `anim_done`.
-*   **Audio:** elementos `<audio>` con zumbido de fondo, rugidos, golpes y victoria.
+*   **Audio:** sintetizado con Web Audio en `web/audio.js` (sin archivos): zumbido de fondo, encendido, selección, pasos, dado, ataque, golpe, muerte, cambio de turno, victoria y rechazo. `M` silencia. Se cambió el día 2: evita buscar y licenciar archivos, y funciona offline.
 *   **HUD:** en HTML/CSS sobre el canvas. Muestra:
     *   el turno, con el color del bando;
     *   la pieza seleccionada;
@@ -1235,9 +1235,10 @@ Hoy el repo solo tiene `Dejarik_AR_Brief.pdf`, `concepts_brief.md` y este docume
 
 *   **Cambios:** los archivos fuente de Blender de cada criatura y el prompt usado (`<kind>.prompt.md`).
 
-##### 36. `web/assets/sfx/*.ogg` (Create, P4)
+##### 36. `web/audio.js` (Create; reemplaza a `web/assets/sfx/*.ogg`)
 
-*   **Cambios:** `hum`, `select`, `step`, `attack`, `hit`, `death`, `win` y `boot`, con licencia CC0.
+*   **Cambios:** cada sonido es una función chica con osciladores y ruido filtrado (`boot`, `select`, `step`, `dice`, `attack`, `hit`, `death`, `turn`, `win`, `denied`) más un zumbido de fondo. Volumen general en `VOLUME`. `?soundcheck` renderiza cada sonido offline y muestra su pico, para detectar sonidos mudos sin parlantes.
+*   **Por qué:** no hay archivos que buscar, licenciar ni empaquetar, y el estilo sintético encaja con el holograma.
 
 #### Otros archivos
 
