@@ -3,8 +3,8 @@
     python tools/check_glb.py web/assets/creatures/bestia.glb [otro.glb ...]
 
 Termina con código 1 si algo falla. Los mensajes están pensados para pegárselos
-tal cual a la IA que opera Blender. Mide el modelo en reposo (sin animar),
-transformando las cajas de cada malla por la jerarquía de nodos.
+tal cual a la IA que opera Blender. Mide el modelo en el primer cuadro de `idle`
+(la pose que se ve en el tablero), deformando las mallas con su esqueleto.
 """
 import json
 import struct
@@ -19,7 +19,7 @@ HEIGHT_M = (0.05, 0.07)
 BASE_HALF_M = 0.0125      # la base entra en un cuadrado de 25 x 25 mm centrado en el origen
 ORIGIN_TOL_M = 0.005      # el punto más bajo tiene que estar a ±5 mm de y = 0
 DRACO = "KHR_draco_mesh_compression"
-COMPONENTS = {"SCALAR": 1, "VEC3": 3, "MAT4": 16}
+COMPONENTS = {"SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4, "MAT4": 16}
 
 
 def read_glb(path):
@@ -39,32 +39,55 @@ def read_glb(path):
     return gltf, binary, len(data)
 
 
-def read_floats(gltf, binary, index):
+DTYPES = {5126: "<f4", 5121: "u1", 5123: "<u2", 5125: "<u4"}
+
+
+def read_accessor(gltf, binary, index):
+    """Accessor -> array (count, componentes) de floats. Respeta byteStride y normalized."""
     acc = gltf["accessors"][index]
     view = gltf["bufferViews"][acc["bufferView"]]
-    n = COMPONENTS[acc["type"]]
+    dt, n = np.dtype(DTYPES[acc["componentType"]]), COMPONENTS[acc["type"]]
     start = view.get("byteOffset", 0) + acc.get("byteOffset", 0)
-    return np.frombuffer(binary, "<f4", acc["count"] * n, start).reshape(acc["count"], n)
+    stride = view.get("byteStride", dt.itemsize * n)
+    raw = np.lib.stride_tricks.as_strided(
+        np.frombuffer(binary, dt, offset=start, count=(acc["count"] - 1) * stride // dt.itemsize + n),
+        shape=(acc["count"], n), strides=(stride, dt.itemsize))
+    out = raw.astype(float)
+    if acc.get("normalized"):
+        out /= np.iinfo(dt).max
+    return out
 
 
-def local_matrix(node):
-    if "matrix" in node:
+def local_matrix(node, override=None):
+    if "matrix" in node and not override:
         return np.array(node["matrix"], dtype=float).reshape(4, 4, order="F")
-    x, y, z, w = node.get("rotation", [0, 0, 0, 1])
+    trs = {**node, **(override or {})}
+    x, y, z, w = trs.get("rotation", [0, 0, 0, 1])
     R = np.array([[1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w)],
                   [2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w)],
                   [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)]])
     M = np.eye(4)
-    M[:3, :3] = R * np.array(node.get("scale", [1, 1, 1]))
-    M[:3, 3] = node.get("translation", [0, 0, 0])
+    M[:3, :3] = R * np.array(trs.get("scale", [1, 1, 1]))
+    M[:3, 3] = trs.get("translation", [0, 0, 0])
     return M
 
 
-def world_matrices(gltf):
-    nodes, world = gltf.get("nodes", []), {}
+def clip_first_frame(gltf, binary, clip):
+    """{nodo: {"translation"|"rotation"|"scale": valor}} en el primer cuadro del clip."""
+    anim = next((a for a in gltf.get("animations", []) if a.get("name") == clip), None)
+    pose = {}
+    for ch in (anim or {}).get("channels", []):
+        target, sampler = ch["target"], anim["samplers"][ch["sampler"]]
+        if target.get("path") in ("translation", "rotation", "scale") and "output" in sampler:
+            pose.setdefault(target["node"], {})[target["path"]] = read_accessor(gltf, binary, sampler["output"])[0].tolist()
+    return pose
+
+
+def world_matrices(gltf, pose=None):
+    nodes, world, pose = gltf.get("nodes", []), {}, pose or {}
 
     def visit(i, parent):
-        world[i] = parent @ local_matrix(nodes[i])
+        world[i] = parent @ local_matrix(nodes[i], pose.get(i))
         for c in nodes[i].get("children", []):
             visit(c, world[i])
 
@@ -74,25 +97,31 @@ def world_matrices(gltf):
     return world
 
 
-def bounds(gltf, binary):
-    """(min xyz, max xyz) del modelo en reposo, en metros."""
-    world, pts = world_matrices(gltf), []
+def bounds(gltf, binary, clip="idle"):
+    """(min xyz, max xyz) en metros, en el primer cuadro de `clip` (o en reposo si
+    no existe). Las mallas con esqueleto se deforman de verdad, vértice por
+    vértice: la pose de bind suele ser con los brazos abiertos y no es la que se ve."""
+    world, pts = world_matrices(gltf, clip_first_frame(gltf, binary, clip)), []
     for i, node in enumerate(gltf.get("nodes", [])):
         if "mesh" not in node or i not in world:
             continue
-        M = world[i]
-        if "skin" in node:  # en reposo: mundo del primer hueso x su inverse bind matrix
-            skin = gltf["skins"][node["skin"]]
-            M = world[skin["joints"][0]]
-            if "inverseBindMatrices" in skin:
-                M = M @ read_floats(gltf, binary, skin["inverseBindMatrices"])[0].reshape(4, 4, order="F")
         for prim in gltf["meshes"][node["mesh"]]["primitives"]:
-            acc = gltf["accessors"][prim["attributes"]["POSITION"]]
-            lo, hi = acc["min"], acc["max"]
-            for cx in (lo[0], hi[0]):
-                for cy in (lo[1], hi[1]):
-                    for cz in (lo[2], hi[2]):
-                        pts.append((M @ [cx, cy, cz, 1])[:3])
+            attrs = prim["attributes"]
+            if "skin" in node and "JOINTS_0" in attrs:
+                skin = gltf["skins"][node["skin"]]
+                ibm = (read_accessor(gltf, binary, skin["inverseBindMatrices"]).reshape(-1, 4, 4).transpose(0, 2, 1)
+                       if "inverseBindMatrices" in skin else np.tile(np.eye(4), (len(skin["joints"]), 1, 1)))
+                J = np.array([world[j] for j in skin["joints"]]) @ ibm
+                v = np.c_[read_accessor(gltf, binary, attrs["POSITION"]), np.ones(gltf["accessors"][attrs["POSITION"]]["count"])]
+                joints = read_accessor(gltf, binary, attrs["JOINTS_0"]).astype(int)
+                weights = read_accessor(gltf, binary, attrs["WEIGHTS_0"])
+                skin_m = np.einsum("vk,vkab->vab", weights, J[joints])
+                pts.extend(np.einsum("vab,vb->va", skin_m, v)[:, :3])
+            else:
+                acc = gltf["accessors"][attrs["POSITION"]]
+                lo, hi = acc["min"], acc["max"]
+                for corner in np.array(np.meshgrid(*zip(lo, hi))).reshape(3, -1).T:
+                    pts.append((world[i] @ [*corner, 1])[:3])
     if not pts:
         return None
     pts = np.array(pts)
@@ -119,8 +148,11 @@ def check(path):
     empty = [c for c in CLIPS if c in anims and not anims[c].get("channels")]
     if empty:
         errors.append(f"Los clips {empty} existen pero no animan nada.")
-    if len(gltf.get("skins", [])) > 1:
-        errors.append(f"Tiene {len(gltf['skins'])} esqueletos; tiene que tener uno solo (o ninguno).")
+    # Varias mallas (cuerpo, ojos) pueden tener su propio "skin" sobre el mismo
+    # esqueleto. Lo que se cuenta son las raíces de esqueleto distintas.
+    roots = {s.get("skeleton", min(s["joints"])) for s in gltf.get("skins", [])}
+    if len(roots) > 1:
+        errors.append(f"Tiene {len(roots)} esqueletos distintos; tiene que tener uno solo (o ninguno).")
 
     b = bounds(gltf, binary)
     if b is None:
