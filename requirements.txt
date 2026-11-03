@@ -1,0 +1,12 @@
+# Python 3.11. mediapipe y numpy 1.26 no tienen versiones para 3.13+.
+# Solo opencv-contrib-python: si también se instala opencv-python, los dos
+# instalan el módulo cv2, uno pisa al otro y se pierde aruco.
+# Día 1: instalar en un venv limpio y verificar con
+#   python -c "import cv2.aruco, mediapipe.tasks"
+# Si algún pin falla, cambiarlo acá y anotar por qué.
+opencv-contrib-python==4.10.0.84
+mediapipe==0.10.14
+numpy==1.26.4
+websockets==15.0.1
+pillow==10.4.0
+pytest==8.3.3

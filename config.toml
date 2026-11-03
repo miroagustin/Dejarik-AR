@@ -1,0 +1,62 @@
+# Valores que se ajustan en la casa del anfitrión, sin tocar código.
+
+[camera]
+index = 0
+width = 1280
+height = 720
+fourcc = "MJPG"
+# Estos dependen del driver de cada webcam: probarlos el día 1 con
+# tools/calibrate.py y descomentarlos. Si una clave no está, no se toca.
+# autofocus = 0
+# focus = 0
+# auto_exposure = 0.25   # en DSHOW, 0.25 = manual y 0.75 = automática
+# exposure = -6
+# auto_wb = 0
+# wb = 4500
+
+[pose]
+max_reproj_px = 3.0
+min_markers = 2
+hold_ms = 500
+lock_stable_s = 2.0
+lock_max_dt_mm = 2.0
+lock_max_drot_deg = 0.5
+
+# One-Euro: valores iniciales, se ajustan mirando el temblor con la tecla D.
+[filter.t]
+min_cutoff = 1.0
+beta = 0.5
+d_cutoff = 1.0
+
+[filter.r]
+min_cutoff = 1.0
+beta = 0.05
+d_cutoff = 1.0
+
+[hands]
+pinch_on = 0.25
+pinch_off = 0.35
+pinch_ms = 300
+input_width = 640
+
+[net]
+port = 8000
+jpeg_quality = 80
+remote_width = 854
+remote_quality = 60
+remote_max_fps = 15
+cloudflared_path = "tools/bin/cloudflared.exe"
+
+[ai]
+think_min_s = 0.4
+think_max_s = 0.9
+tap_gap_s = 0.6
+
+[game]
+seed = 1
+
+[anim]
+anim_timeout_s = 5
+
+[browser]
+chrome_path = "C:/Program Files/Google/Chrome/Application/chrome.exe"
