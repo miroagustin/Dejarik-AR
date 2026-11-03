@@ -15,8 +15,8 @@ import numpy as np
 
 CLIPS = ["idle", "walk", "attack", "hit", "die"]
 MAX_BYTES = 5 * 1024 * 1024
-HEIGHT_M = (0.05, 0.07)
-BASE_HALF_M = 0.0125      # la base entra en un cuadrado de 25 x 25 mm centrado en el origen
+HEIGHT_M = (0.030, 0.070)
+BASE_RADIUS_M = 0.022     # vista desde arriba, entra en un círculo de 44 mm centrado en el origen
 ORIGIN_TOL_M = 0.005      # el punto más bajo tiene que estar a ±5 mm de y = 0
 DRACO = "KHR_draco_mesh_compression"
 COMPONENTS = {"SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4, "MAT4": 16}
@@ -97,10 +97,11 @@ def world_matrices(gltf, pose=None):
     return world
 
 
-def bounds(gltf, binary, clip="idle"):
-    """(min xyz, max xyz) en metros, en el primer cuadro de `clip` (o en reposo si
-    no existe). Las mallas con esqueleto se deforman de verdad, vértice por
-    vértice: la pose de bind suele ser con los brazos abiertos y no es la que se ve."""
+def posed_points(gltf, binary, clip="idle"):
+    """Puntos (N, 3) en metros del modelo en el primer cuadro de `clip` (o en
+    reposo si no existe). Las mallas con esqueleto se deforman de verdad, vértice
+    por vértice: la pose de bind suele ser con los brazos abiertos y no es la que
+    se ve. Las mallas sin esqueleto aportan las 8 esquinas de su caja."""
     world, pts = world_matrices(gltf, clip_first_frame(gltf, binary, clip)), []
     for i, node in enumerate(gltf.get("nodes", [])):
         if "mesh" not in node or i not in world:
@@ -122,10 +123,7 @@ def bounds(gltf, binary, clip="idle"):
                 lo, hi = acc["min"], acc["max"]
                 for corner in np.array(np.meshgrid(*zip(lo, hi))).reshape(3, -1).T:
                     pts.append((world[i] @ [*corner, 1])[:3])
-    if not pts:
-        return None
-    pts = np.array(pts)
-    return pts.min(axis=0), pts.max(axis=0)
+    return np.array(pts).reshape(-1, 3)
 
 
 def check(path):
@@ -154,20 +152,21 @@ def check(path):
     if len(roots) > 1:
         errors.append(f"Tiene {len(roots)} esqueletos distintos; tiene que tener uno solo (o ninguno).")
 
-    b = bounds(gltf, binary)
-    if b is None:
+    pts = posed_points(gltf, binary)
+    if not len(pts):
         return errors + ["No tiene ninguna malla."]
-    lo, hi = b
+    lo, hi = pts.min(axis=0), pts.max(axis=0)
+    radius = float(np.hypot(pts[:, 0], pts[:, 2]).max())
     height = hi[1] - lo[1]
-    if not HEIGHT_M[0] <= height <= HEIGHT_M[1]:
-        errors.append(f"Mide {height * 1000:.1f} mm de alto; tiene que medir entre 50 y 70 mm (+Y hacia arriba, 1 unidad = 1 m).")
+    # Primero la base: si no entra, la escala correcta es BASE_RADIUS_M / radius.
+    if radius > BASE_RADIUS_M:
+        errors.append(f"Vista desde arriba, llega a {radius * 1000:.1f} mm del origen; tiene que entrar en un círculo "
+                      f"de 44 mm de diámetro centrado en el origen. Escalarla por {BASE_RADIUS_M / radius:.3f} "
+                      "(queda de {:.0f} mm de alto) o compactar la pose de idle.".format(height * BASE_RADIUS_M / radius * 1000))
+    elif not HEIGHT_M[0] <= height <= HEIGHT_M[1]:
+        errors.append(f"Mide {height * 1000:.1f} mm de alto; tiene que medir entre 30 y 70 mm (+Y hacia arriba, 1 unidad = 1 m).")
     if abs(lo[1]) > ORIGIN_TOL_M:
         errors.append(f"El punto más bajo está en y = {lo[1] * 1000:.1f} mm; el origen tiene que estar en la base (y = 0).")
-    over = max(abs(lo[0]), abs(hi[0]), abs(lo[2]), abs(hi[2]))
-    if over > BASE_HALF_M:
-        errors.append(f"La base mide {(hi[0] - lo[0]) * 1000:.0f} x {(hi[2] - lo[2]) * 1000:.0f} mm (X x Z) "
-                      f"y llega a {over * 1000:.1f} mm del origen; tiene que entrar en un cuadrado de 25 x 25 mm "
-                      "centrado en el origen. Hacer la criatura más compacta, no más chica.")
     return errors
 
 

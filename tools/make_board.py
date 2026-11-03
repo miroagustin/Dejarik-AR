@@ -1,7 +1,11 @@
 """Genera los PDF para imprimir a partir de board_spec.json.
 
-    python tools/make_board.py            -> print/board.pdf (A3, escala 1:1)
-    python tools/make_board.py --a4       -> print/board_a4.pdf (A4, tablero achicado)
+    python tools/make_board.py            -> print/board.pdf (A2, escala 1:1; imprimir en copistería)
+    python tools/make_board.py --page A3  -> print/board_a3.pdf (tablero achicado ~73%)
+    python tools/make_board.py --page A4  -> print/board_a4.pdf (tablero achicado ~51%)
+
+Las versiones achicadas sirven para probar en casa; las criaturas se diseñan
+para el A2 (casillas internas de 40 mm).
     python tools/make_board.py --checker  -> print/checker.pdf (damero 9x6 para calibrar)
 
 Imprimir SIEMPRE al 100% ("tamaño real"), nunca "ajustar a página". Después medir
@@ -20,8 +24,8 @@ from dejarik.board import ROOT, board_side_m, load_spec, render_board  # noqa: E
 
 DPI = 300
 PPM = DPI / 0.0254  # píxeles por metro
-PAGES_MM = {"A3": (297, 420), "A4": (210, 297)}
-MARGIN_MM = 8
+PAGES_MM = {"A2": (420, 594), "A3": (297, 420), "A4": (210, 297)}
+MARGIN_MM = 6
 
 
 def mm(v):
@@ -60,7 +64,7 @@ def make_board(page_name):
     page[y0:y0 + board.shape[0], x0:x0 + board.shape[1]] = board
 
     draw_ruler(page, mm(MARGIN_MM + 5), y0 + board.shape[0] + mm(20), scale)
-    save_pdf(page, ROOT / "print" / ("board.pdf" if page_name == "A3" else "board_a4.pdf"))
+    save_pdf(page, ROOT / "print" / ("board.pdf" if page_name == "A2" else f"board_{page_name.lower()}.pdf"))
     print(f"Escala nominal {scale:.3f}: la regla debería medir {100 * scale:.1f} mm.")
 
 
@@ -79,10 +83,10 @@ def make_checker(cols=10, rows=7, square_mm=25):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--a4", action="store_true", help="tablero achicado en una hoja A4")
+    ap.add_argument("--page", choices=list(PAGES_MM), default="A2", help="A2 = escala 1:1; A3/A4 = achicado")
     ap.add_argument("--checker", action="store_true", help="damero para tools/calibrate.py")
     args = ap.parse_args()
     if args.checker:
         make_checker()
     else:
-        make_board("A4" if args.a4 else "A3")
+        make_board(args.page)

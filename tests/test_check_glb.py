@@ -38,9 +38,15 @@ def test_missing_clip_is_reported(tmp_path):
     assert len(errors) == 1 and "walk" in errors[0]
 
 
-def test_wide_base_fails_even_if_height_is_fine(tmp_path):
-    errors = check(make_glb(tmp_path / "a.glb", size_mm=(20, 60, 40)))
-    assert len(errors) == 1 and "25 x 25" in errors[0]
+def test_wide_base_fails_and_suggests_the_scale(tmp_path):
+    # caja de 40 x 40: las esquinas quedan a 28,3 mm del origen (> 22 mm)
+    errors = check(make_glb(tmp_path / "a.glb", size_mm=(40, 60, 40)))
+    assert len(errors) == 1 and "44 mm" in errors[0] and "0.778" in errors[0]
+
+
+def test_short_creature_is_fine_down_to_30_mm(tmp_path):
+    assert check(make_glb(tmp_path / "a.glb", size_mm=(20, 32, 20))) == []
+    assert any("30 y 70" in e for e in check(make_glb(tmp_path / "b.glb", size_mm=(20, 25, 20))))
 
 
 def test_fbx_scale_is_caught_through_node_transform(tmp_path):
@@ -59,3 +65,28 @@ def test_origin_must_be_at_the_base(tmp_path):
 def test_draco_is_rejected(tmp_path):
     errors = check(make_glb(tmp_path / "a.glb", extensions=["KHR_draco_mesh_compression"]))
     assert any("Draco" in e for e in errors)
+
+
+def test_adapt_renames_scales_and_grounds(tmp_path):
+    from adapt_glb import adapt
+    from check_glb import posed_points, read_glb
+
+    src = make_glb(tmp_path / "src.glb", size_mm=(600, 1500, 600), node={"translation": [0, 3, 0]},
+                   clips=["Armature|Idle", "Armature|Walk", "Armature|Bite_Front", "Armature|HitRecieve",
+                          "Armature|Death", "Armature|Dance"])
+    height, missing = adapt(src, tmp_path / "out.glb")
+    assert missing == []
+    assert check(tmp_path / "out.glb") == []
+    gltf, binary, _ = read_glb(tmp_path / "out.glb")
+    assert [a["name"] for a in gltf["animations"]] == CLIPS  # Dance se descarta
+    pts = posed_points(gltf, binary)
+    assert abs(pts[:, 1].min()) < 1e-6
+    assert 0.030 <= height <= 0.070
+
+
+def test_adapt_reports_missing_clip(tmp_path):
+    from adapt_glb import adapt
+
+    src = make_glb(tmp_path / "src.glb", clips=["A|Idle", "A|Walk", "A|Punch", "A|Death"])
+    _, missing = adapt(src, tmp_path / "out.glb")
+    assert missing == ["hit"]

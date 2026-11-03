@@ -862,9 +862,10 @@ Hoy el repo solo tiene `Dejarik_AR_Brief.pdf`, `concepts_brief.md` y este docume
 
     Las esquinas de cada marcador **no** se escriben a mano: `board.py` las calcula a partir del centro, el tamaño y la rotación.
 
-    Valores iniciales, que entran en A3 con margen y se congelan el día 2:
-    *   `r0 = 0.035`, `r1 = 0.072`, `r2 = 0.110`;
-    *   12 marcadores de `0.022` m sobre el radio `0.125`, en el centro de cada sector; el sector k lleva el ID k−1;
+    Valores iniciales, que entran en A2 (420 × 594 mm) con margen y se congelan el día 2:
+    *   `r0 = 0.0495`, `r1 = 0.102`, `r2 = 0.156`;
+    *   12 marcadores de `0.031` m sobre el radio `0.177`, en el centro de cada sector; el sector k lleva el ID k−1;
+    *   se pasó de A3 a A2 (×1,41) el día 2: con A3 la casilla interna medía 28 mm y ninguna criatura animada de Quaternius entraba sin superponerse. En A2 mide 40 mm de ancho y los marcadores ganan tamaño para la detección;
     *   `sector_offset_deg = 0`;
     *   `rotation_deg`: ángulo del borde superior del marcador, antihorario desde +X; el borde superior mira hacia afuera;
     *   las claves de `adjacency` son strings (JSON).
@@ -918,7 +919,7 @@ Hoy el repo solo tiene `Dejarik_AR_Brief.pdf`, `concepts_brief.md` y este docume
 *   **Tipo:** especificación de los modelos. Es también el prompt base para la IA que opera Blender a través del MCP de Blender.
 *   **Cambios:**
     *   **Contrato de salida**, que es lo mismo que verifica `tools/check_glb.py`:
-        *   `.glb`, +Y hacia arriba, 1 unidad = 1 m, altura de 0,05 a 0,07 m, y la base (X y Z, en reposo) entra en un cuadrado de 25 × 25 mm centrado en el origen, porque una casilla del anillo interno mide 28 mm de ancho;
+        *   `.glb`, +Y hacia arriba, 1 unidad = 1 m, en el primer cuadro de `idle`: vista desde arriba entra en un círculo de 44 mm centrado en el origen (una casilla del anillo interno del A2 mide 40 mm de ancho) y mide de 30 a 70 mm de alto. Se cambió el día 2, después de medir los monstruos de Quaternius: son casi tan anchos como altos y quedan entre 35 y 50 mm;
         *   menos de 5 MB, sin Draco;
         *   un solo esqueleto, o animación por objeto si la criatura es rígida;
         *   clips llamados exactamente `idle|walk|attack|hit|die`; `idle` y `walk` deben hacer loop sin saltos;
@@ -946,7 +947,7 @@ Hoy el repo solo tiene `Dejarik_AR_Brief.pdf`, `concepts_brief.md` y este docume
 *   **Cambios:**
     *   lee `board_spec.json`;
     *   dibuja a 300 dpi los anillos, sectores, números de casilla, la cruz central, los 12 marcadores (con `cv2.aruco.generateImageMarker`) y una regla de 100 mm;
-    *   guarda `print/board.pdf` con Pillow, en tamaño A3. Sin impresora A3, `--a4` genera `print/board_a4.pdf`: el tablero achicado (~69%) en una sola A4, con la regla achicada igual; `print_scale_measured` corrige la escala. Se descartó 2×A4 porque la unión cruza marcadores y los márgenes de impresión la cortan;
+    *   guarda `print/board.pdf` con Pillow, en tamaño A2 (se imprime en una copistería). `--page A3` y `--page A4` generan versiones achicadas en una sola hoja, con la regla achicada igual; `print_scale_measured` corrige la escala. Sirven para probar en casa. Se descartó partir el tablero en varias hojas porque la unión cruza marcadores y los márgenes de impresión la cortan;
     *   `--checker` genera `print/checker.pdf`, el damero 9×6 para `calibrate.py`.
 *   **Por qué:** el tablero impreso y el spec no pueden diferir.
 
@@ -1204,7 +1205,7 @@ Hoy el repo solo tiene `Dejarik_AR_Brief.pdf`, `concepts_brief.md` y este docume
     *   resalta `frame.hand.cell` con un estilo de "hover" distinto (CUJ 3);
     *   al recibir los `events` los pone en la cola.
 
-##### 35. `web/assets/creatures/{guardian,bestia,acechador,soldado}.glb` (Create, generados por IA con el MCP de Blender; operador P4, revisión L)
+##### 35. `web/assets/creatures/{guardian,bestia,acechador,soldado}.glb` (Create: monstruos de Quaternius CC0 adaptados con `tools/adapt_glb.py`; la IA de Blender solo si falta un clip; operador P4, revisión L)
 
 *   **Cambios:**
     *   modelos producidos por la IA que pasan `tools/check_glb.py` y la revisión visual en el visor;
@@ -1221,9 +1222,14 @@ Hoy el repo solo tiene `Dejarik_AR_Brief.pdf`, `concepts_brief.md` y este docume
         *   que no use Draco;
         *   que estén los 5 nombres de clip;
         *   que haya un solo esqueleto, o ninguno con animación por objeto;
-        *   la altura, la base de 25 × 25 mm y que el origen esté en la base, a partir de los `min/max` de los accessors de posición transformados por la jerarquía de nodos (y, en mallas con esqueleto, por el primer hueso y su inverse bind matrix);
+        *   la altura (30–70 mm), el círculo de 44 mm y que el origen esté en la base, en el primer cuadro de `idle`: deforma las mallas con su esqueleto vértice por vértice (la pose de bind suele ser en T y no es la que se ve);
     *   termina con código 1 y un mensaje concreto por cada falla. Ese mensaje es el que se le devuelve a la IA.
 *   **Por qué:** el criterio de aceptación tiene que ser mecánico, porque el que produce los modelos no es una persona.
+
+##### 35a. `tools/adapt_glb.py` (Create, P4)
+
+*   **Cambios:** renombra los clips de un monstruo animado (Quaternius y similares) a `idle/walk/attack/hit/die`, descarta los demás, agrega un nodo raíz con la escala que lo hace entrar en el círculo de 44 mm (máximo 70 mm de alto) y lo apoya en y = 0. No toca geometría ni animaciones. Termina corriendo `check_glb`.
+*   **Por qué:** con modelos que ya vienen animados, la adaptación es mecánica y no necesita Blender.
 
 ##### 35c. `assets_src/*.blend` (Create, P4)
 
@@ -1316,7 +1322,7 @@ Hoy el repo solo tiene `Dejarik_AR_Brief.pdf`, `concepts_brief.md` y este docume
 |---|---|---|
 | 1–2 | Archivos 1–10, `board.py` y `make_board.py` (con el tablero ya impreso y medido), `calib.npz`, `protocol.encode_frame/decode_frame` (P4), `fake_session.py` y `session_01.dj`. | Todos |
 | 3–5 | `vision.py` y `one_euro.py` con sus tests · `game.py` con sus tests · `protocol.py`, `transport.py` y `__main__.py` · `scene.js` y `net.js`. **Control día 5:** un cubo anclado sobre el tablero real a través del WebSocket. Si falla, se evalúa Panda3D. | P1 · P2 · P4 · L |
-| 3–7 | **Prueba de assets con IA:** P4 genera con el MCP de Blender **una** criatura completa (`bestia`) que pase `check_glb.py` y se vea en el visor. **Control día 7:** si no hay una criatura animada aceptable, se usan modelos ya animados (fuente 1 de `docs/assets_checklist.md`) para las 4. | P4 (revisa L) |
+| 2–4 | **Criaturas:** P4 elige 4 monstruos de Quaternius (lista medida en `docs/assets_checklist.md`), los adapta con `tools/adapt_glb.py` y los deja en `web/assets/creatures/`. La IA de Blender queda para agregar clips faltantes. **Control día 7:** las 4 se ven bien en el visor `?viewer=`. | P4 (revisa L) |
 | 6–10 | `creatures.js` con cápsulas provisorias y visor `?viewer=`, `events.js`, `hud.js` y `hologram.js` · `hands.py` · `recording.py` · la IA genera las otras 3 criaturas. **Control 1 (día 10):** partida completa con mouse sobre video en vivo. | L · P3 · P4 |
 | 8–12 | `ai.py` y `test_ai.py` (modo `cpu`) · roles, modos y video de 480p en `transport.py`, más `tunnel.py`. **Control día 12:** un integrante juega una partida remota desde su casa, por Teams, con la pantalla compartida. Se miden los fps del remoto, la latencia del clic y cómo se ve el shader a través de Teams. | P2 · P4 · L |
 | 11–16 | Criaturas reales, sonido, `debug.js`, ajuste de la mano. **Control 2 (día 16):** se decide si la interacción es con la mano o con un puntero con marcador. Se graba el MP4 de respaldo. | L · P3 · P4 · P1 |

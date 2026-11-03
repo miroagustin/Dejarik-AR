@@ -37,13 +37,14 @@ python -c "import cv2.aruco, mediapipe.tasks; print('ok')"
 1. Generar los PDF:
 
    ```powershell
-   python tools/make_board.py            # print/board.pdf, A3 a escala 1:1
-   python tools/make_board.py --a4       # print/board_a4.pdf, alternativa en una A4 con el tablero achicado
+   python tools/make_board.py            # print/board.pdf, A2 a escala 1:1 (copistería)
+   python tools/make_board.py --page A3  # print/board_a3.pdf, achicado, para probar en casa
+   python tools/make_board.py --page A4  # print/board_a4.pdf, achicado, para probar en casa
    python tools/make_board.py --checker  # print/checker.pdf, el damero para calibrar
    ```
 
 2. Imprimir **al 100% / "tamaño real"**, nunca con "ajustar a página". Usar papel mate y pegar la hoja sobre foamboard.
-3. Medir con una regla la regla impresa. En A3 debería dar 100 mm; en A4, lo que indique `make_board.py`.
+3. Medir con una regla la regla impresa. En A2 debería dar 100 mm; en A3 o A4, lo que indique `make_board.py`.
 4. Anotar la medida real en `print_scale_measured` dentro de `board_spec.json`. Todas las longitudes se corrigen con ese valor.
 
 ## Calibrar la webcam
