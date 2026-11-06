@@ -43,7 +43,8 @@ hold_ms = 1500           # tiempo que hay que sostener para confirmar
 cancel_radius_mm = 20
 cell_frames = 3
 box_margin = 0.15
-input_width = 640
+input_width = 320        # ancho de la imagen que ve MediaPipe: más chico = más rápido
+max_fps = 20             # tope del hilo de la mano (con varias manos en cuadro MediaPipe es caro)
 
 [net]
 port = 8000

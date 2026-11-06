@@ -83,7 +83,7 @@ export function createDebug(canvas) {
       if (hd) {
         const f = v => (v == null ? "—" : v.toFixed(2));
         line(`mano ${f(hd.metric)} (2D ${f(hd.metric2d)}) · medio ${f(hd.ext)} ${hd.extended ? "estirado" : "doblado"} · ` +
-             `hold ${f(hd.hold)} · fijada ${hd.lock_cell ?? "—"} · dist ${hd.dist_mm == null ? "—" : hd.dist_mm.toFixed(0) + " mm"} · ${hd.reason || "ok"}`, y);
+             `hold ${f(hd.hold)} · fijada ${hd.lock_cell ?? "—"} · dist ${hd.dist_mm == null ? "—" : hd.dist_mm.toFixed(0) + " mm"} · ${hd.reason || "ok"} · ${hd.ms ?? "—"} ms`, y);
       }
     },
   };

@@ -217,18 +217,24 @@ def hands_loop(get_packet, publish_hand, on_tap, stop, K, dist, spec, cfg, cell_
     tracker = HandTracker(cfg)
     conf = Confirm(p["on"], p["off"], p["hold_ms"], p["cancel_radius_m"], p["cell_frames"], p["rearm_on_move"],
                    cell_ok)
-    last_id = None
+    last_id, min_dt, next_t = None, 1 / cfg["max_fps"], 0.0
     while not stop.is_set():
         pkt = get_packet()
-        if pkt is None or pkt["frame_id"] == last_id:
+        # Tope de cuadros por segundo: con varias manos en cuadro MediaPipe re-detecta
+        # palmas seguido y, sin tope, le saca CPU a la pose y al video.
+        if pkt is None or pkt["frame_id"] == last_id or time.monotonic() < next_t:
             time.sleep(0.005)
             continue
-        last_id = pkt["frame_id"]
+        last_id, next_t = pkt["frame_id"], time.monotonic() + min_dt
         t = pkt["t"]
+        t_mp = time.perf_counter()
         res = tracker.landmarks(pkt["bgr"], t)
+        ms = round((time.perf_counter() - t_mp) * 1000, 1)
         if res is None:
             conf.update(None, None, None, t)
-            publish_hand(hand_msg(conf, None, None, None, False, p["box_margin"]))
+            msg = hand_msg(conf, None, None, None, False, p["box_margin"])
+            msg["dbg"]["ms"] = ms
+            publish_hand(msg)
             continue
         lm2d, lmw = res
         ext_thresh = p["ext_off"] if conf.active else p["ext_on"]
@@ -242,4 +248,6 @@ def hands_loop(get_packet, publish_hand, on_tap, stop, K, dist, spec, cfg, cell_
         tap = conf.update(metric, cell, xy, t)
         if tap is not None:
             on_tap(tap)
-        publish_hand(hand_msg(conf, lm2d, metric, metric_2d(lm2d), extended, p["box_margin"], middle_ratio(lmw)))
+        msg = hand_msg(conf, lm2d, metric, metric_2d(lm2d), extended, p["box_margin"], middle_ratio(lmw))
+        msg["dbg"]["ms"] = ms
+        publish_hand(msg)

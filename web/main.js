@@ -41,6 +41,15 @@ async function runGame() {
   layout(view.renderer, aspect);
   addEventListener("resize", () => layout(view.renderer, aspect));
 
+  let decoding = false, pendingFrame = null;
+  async function showFrame(header, jpeg) {
+    await view.setFrame(header, jpeg);
+    lastHeader = header;
+    if (!booted && header.pose.ok) { booted = true; audio.play("boot"); audio.startHum(); }
+    const a = header.size[0] / header.size[1];
+    if (Math.abs(a - aspect) > 1e-3) { aspect = a; layout(view.renderer, aspect); }
+  }
+
   net = connect({
     hello(msg) { you = msg.you; isRemote = msg.role === "remote"; hud.hello(msg); },
     state(msg) {
@@ -56,12 +65,14 @@ async function runGame() {
     events(msg) { events.push(msg.events); },
     denied(msg) { audio.play("denied"); hud.notice(msg.reason === "not_your_turn" ? "No es tu turno" : "Esperá a que termine la animación"); },
     async frame(header, jpeg) {
-      await view.setFrame(header, jpeg);
-      lastHeader = header;
-      if (!booted && header.pose.ok) { booted = true; audio.play("boot"); audio.startHum(); }
-      const a = header.size[0] / header.size[1];
-      if (Math.abs(a - aspect) > 1e-3) { aspect = a; layout(view.renderer, aspect); }
       if (isRemote) net.send({ type: "frame_ack", frame_id: header.frame_id });
+      // De a un cuadro: si llegan más mientras se decodifica, queda solo el último. Sin esto,
+      // con la página lenta los JPEG y los createImageBitmap se acumulan y la memoria crece.
+      if (decoding) { pendingFrame = [header, jpeg]; return; }
+      decoding = true;
+      try {
+        for (let f = [header, jpeg]; f; f = pendingFrame, pendingFrame = null) await showFrame(...f);
+      } finally { decoding = false; }
     },
     onStatus(text) { hud.notice(text, text === "conectado" ? 1000 : 0); },
   });
