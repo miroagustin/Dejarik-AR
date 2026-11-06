@@ -8,6 +8,7 @@ from websockets.exceptions import ConnectionClosed
 
 from dejarik.board import load_spec
 from dejarik.config import load_config
+from dejarik import game
 from dejarik.transport import Server, can_act
 from dejarik.vision import Flags, Pose
 
@@ -115,6 +116,7 @@ def test_remote_stops_with_two_unacked(tmp_path):
 def test_mode_change_cancels_ai(tmp_path):
     cfg = copy.deepcopy(load_config())
     cfg["ai"].update(think_min_s=0.4, think_max_s=0.4)
+    cfg["game"]["cpu_human_side"] = 0
 
     async def body(server, base, port):
         server.publish(frame(0))
@@ -128,12 +130,13 @@ def test_mode_change_cancels_ai(tmp_path):
             assert server.mode == "local"
             assert server.state == before  # ningún tap de la PC
             assert not server.pending
-    run(body, tmp_path, mode="cpu")
+    run(body, tmp_path, cfg=cfg, mode="cpu")
 
 
 def test_cpu_plays_after_host_move(tmp_path):
     cfg = copy.deepcopy(load_config())
     cfg["ai"].update(think_min_s=0, think_max_s=0, tap_gap_s=0)
+    cfg["game"]["cpu_human_side"] = 0
 
     async def body(server, base, port):
         server.publish(frame(0))
@@ -155,4 +158,44 @@ def test_cpu_plays_after_host_move(tmp_path):
                     raise AssertionError(m)
             assert [e["kind"] for e in events] == ["move", "turn", "move", "turn"]
             assert events[2]["piece"] >= 4 and server.state.turn == 0
-    run(body, tmp_path, mode="cpu")
+    run(body, tmp_path, cfg=cfg, mode="cpu")
+
+
+def test_cpu_opens_when_host_plays_red(tmp_path):
+    cfg = copy.deepcopy(load_config())
+    cfg["ai"].update(think_min_s=0, think_max_s=0, tap_gap_s=0)
+    cfg["game"]["cpu_human_side"] = 1
+
+    async def body(server, base, port):
+        server.publish(frame(0))
+        await asyncio.sleep(0.2)
+        assert server.state.turn == 0            # sin anfitrión conectado, la PC no juega
+        async with connect(f"{base}/ws?p=0&k={HOST}") as ws:
+            hello = json.loads(await ws.recv())
+            assert hello["you"] == 1 and hello["role"] == "host"
+            events = []
+            while len(events) < 2:               # move + turn de la PC (azules)
+                m = json.loads(await asyncio.wait_for(ws.recv(), 3))
+                if m["type"] == "events":
+                    events += m["events"]
+                    for e in m["events"]:
+                        await ws.send(json.dumps({"v": 1, "type": "anim_done", "id": e["id"]}))
+            assert events[0]["piece"] < 4 and server.state.turn == 1
+            assert can_act("host", "cpu", 1, 1) and not can_act("host", "cpu", 0, 1)
+    run(body, tmp_path, cfg=cfg, mode="cpu")
+
+
+def test_hand_cell_ok(tmp_path):
+    cfg = copy.deepcopy(load_config())
+    cfg["game"]["cpu_human_side"] = 0
+    s = Server(cfg, load_spec(), Flags(), mode="local", save_path=tmp_path / "s.json")
+    own = next(p for p in s.state.pieces if p.owner == 0)
+    rival = next(p for p in s.state.pieces if p.owner == 1)
+    assert s.hand_cell_ok(own.cell) and not s.hand_cell_ok(rival.cell)
+    empty = next(c for c in range(25) if all(p.cell != c for p in s.state.pieces))
+    assert not s.hand_cell_ok(empty)                       # select: solo piezas propias
+    s.state, _ = game.apply(s.state, ("tap", own.cell))
+    legal = game.legal_cells(s.state, own.id)
+    assert legal and all(s.hand_cell_ok(c) for c in legal) # target: destinos legales
+    s.pending = {1}
+    assert not s.hand_cell_ok(own.cell)                    # animando: nada

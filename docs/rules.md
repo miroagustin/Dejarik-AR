@@ -44,7 +44,9 @@ En cada turno se hace **una** de estas dos acciones:
 - **Mover:** ir a una casilla vacía a una distancia de hasta MOV pasos, sin atravesar casillas ocupadas.
 - **Atacar:** a una pieza rival adyacente. El atacante no se mueve.
 
-## Cómo se elige con clic, toque o pinch
+## Cómo se elige con clic, toque o gesto de la mano
+
+Con la mano: apoyá el índice en una casilla y sostené hasta que se llene el anillo; ver `[hands]` en `config.toml`.
 
 **Sin ninguna pieza elegida** (fase `select`):
 

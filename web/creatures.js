@@ -78,11 +78,15 @@ class Creature {
     this.current = next;
     if (LOOPING.has(name)) return new Promise(r => setTimeout(r, FADE * 1000));
     return new Promise(resolve => {
-      const done = e => {
-        if (e.action !== next) return;
+      // Respaldo por tiempo: si el clip se interrumpe o el mixer deja de actualizarse,
+      // "finished" no llega nunca y la cola de eventos quedaría colgada para siempre.
+      const timer = setTimeout(() => finish(), (next.getClip().duration + FADE) * 1000 + 500);
+      const finish = () => {
+        clearTimeout(timer);
         this.mixer.removeEventListener("finished", done);
         resolve();
       };
+      const done = e => { if (e.action === next) finish(); };
       this.mixer.addEventListener("finished", done);
     });
   }
@@ -134,11 +138,13 @@ export class Army {
   get(id) { return this.byId.get(id); }
 
   // Pone cada pieza viva en su casilla (al conectar o reconectar, o si algo quedó desfasado).
-  sync(pieces) {
+  // removeDead = false mientras se animan eventos: la criatura muerta la saca el evento
+  // death al terminar su animación (si se saca antes, su clip no termina nunca).
+  sync(pieces, removeDead = true) {
     for (const p of pieces) {
       let c = this.byId.get(p.id);
       if (!p.alive) {
-        if (c) { this.parent.remove(c.root); this.byId.delete(p.id); }
+        if (c && removeDead) { this.parent.remove(c.root); this.byId.delete(p.id); }
         continue;
       }
       if (!c) {

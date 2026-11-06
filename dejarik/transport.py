@@ -44,13 +44,14 @@ class LatestBox:
             return self._v
 
 
-def can_act(role, mode, turn):
-    """role: host (p=0), remote (p=1) o ai. Tabla de "Modos de juego y jugadores"."""
+def can_act(role, mode, turn, cpu_human=0):
+    """role: host (p=0), remote (p=1) o ai. Tabla de "Modos de juego y jugadores".
+    cpu_human: el bando del anfitrión en modo cpu ([game] cpu_human_side); la PC juega el otro."""
     if role == "host":
-        return mode == "local" or turn == 0
+        return mode == "local" or turn == (cpu_human if mode == "cpu" else 0)
     if role == "remote":
         return mode == "remote" and turn == 1
-    return role == "ai" and mode == "cpu" and turn == 1
+    return role == "ai" and mode == "cpu" and turn != cpu_human
 
 
 def serve_static(connection, request):
@@ -90,6 +91,7 @@ class Server:
         self.host_token, self.remote_token, self.remote_url = host_token, remote_token, remote_url
         self.input_mode, self.recorder, self.save_path = input_mode, recorder, save_path
         self.state = state or game.new_game(cfg["game"]["seed"])
+        self.cpu_human = cfg["game"].get("cpu_human_side", 0)
         self.bus = LatestBox()
         self.loop = None
         self.conns = {}          # ws -> {"role", "wake": asyncio.Event, "unacked": set()}
@@ -140,7 +142,8 @@ class Server:
         if role == "host" and self.allow_remote:
             tunnel = "up" if self.tunnel_alive() and self.remote_url else "down"
             remote = {"url": self.remote_url, "tunnel": tunnel, "connected": self.remote_ws is not None}
-        self._send(ws, protocol.hello_msg(0 if role == "host" else 1, self.mode, remote))
+        you = (self.cpu_human if self.mode == "cpu" else 0) if role == "host" else 1
+        self._send(ws, protocol.hello_msg(you, self.mode, remote, role))
 
     def _hello_all(self, hosts_only=False):
         for ws in (self._hosts() if hosts_only else list(self.conns)):
@@ -195,6 +198,8 @@ class Server:
             self._hello_all(hosts_only=True)
         self._hello(ws)
         self._send(ws, self._state_msg())
+        if role == "host":
+            self._maybe_ai()
         sender = asyncio.create_task(self._send_frames(ws, c))
         try:
             async for raw in ws:
@@ -248,6 +253,20 @@ class Server:
 
     # ---- juego ----
 
+    def hand_cell_ok(self, cell):
+        """Hilo de manos: ¿tiene sentido que el anillo arranque sobre esta casilla? Tu turno,
+        sin animaciones, y: en select una pieza tuya; en target un destino legal o una pieza
+        tuya (para cambiar de pieza). Las demás las rechazaría el juego igual."""
+        # ponytail: lee self.state desde otro hilo sin lock; State se reemplaza entero en apply,
+        # así que en el peor caso decide con el estado de un cuadro antes.
+        s = self.state
+        if self.pending or s.phase == "over" or not can_act("host", self.mode, s.turn, self.cpu_human):
+            return False
+        here = game.piece_at(s, cell)
+        if here and here.owner == s.turn:
+            return True
+        return s.phase == "target" and cell in game.legal_cells(s, s.selected)
+
     def on_host_tap(self, cell):
         """Pinch de la mano (llega con call_soon_threadsafe): mismos controles que un clic del anfitrión."""
         self.tap("host", cell, None)
@@ -256,7 +275,7 @@ class Server:
         pkt = self.bus.get()
         if pkt is None or not pkt["pose"].ok:
             return  # tracking perdido: se ignoran clics y pinch
-        reason = "animating" if self.pending else None if can_act(role, self.mode, self.state.turn) else "not_your_turn"
+        reason = "animating" if self.pending else None if can_act(role, self.mode, self.state.turn, self.cpu_human) else "not_your_turn"
         if reason:
             for target in ([ws] if ws else self._hosts()):
                 self._send(target, protocol.denied_msg(reason))
@@ -279,7 +298,9 @@ class Server:
         self._maybe_ai()
 
     def _maybe_ai(self):
-        if (self.loop and can_act("ai", self.mode, self.state.turn) and self.state.phase != "over"
+        # La PC espera a que haya un anfitrión mirando: si juega los azules, arranca ella.
+        if (self.loop and self._hosts() and can_act("ai", self.mode, self.state.turn, self.cpu_human)
+                and self.state.phase != "over"
                 and not self.pending and (self.ai_task is None or self.ai_task.done())):
             self.ai_task = self.loop.create_task(self._ai_turn())
 
@@ -293,7 +314,7 @@ class Server:
         for i, action in enumerate(ai.choose(self.state)):
             if i:
                 await asyncio.sleep(a["tap_gap_s"])  # que se vea la selección
-            if self.pending or not can_act("ai", self.mode, self.state.turn):
+            if self.pending or not can_act("ai", self.mode, self.state.turn, self.cpu_human):
                 return
             self.apply(action)
 

@@ -5,7 +5,7 @@ from dejarik.recording import Recorder, read_dj
 from dejarik.vision import to_view_matrix
 
 POSE = {"ok": True, "T": [float(i) for i in range(16)], "n_markers": 12, "reproj_px": 0.4, "locked": False}
-HAND = {"cell": 7, "pinch": False, "px": [10, 20]}
+HAND = {"cell": 7, "pinch": False, "px": [10, 20], "hold": 0.5, "box": [1, 2, 3, 4]}
 
 
 def test_frame_roundtrip():

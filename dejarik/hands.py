@@ -1,9 +1,10 @@
 """Mano: MediaPipe HandLandmarker -> casilla bajo el índice y gesto de confirmación
 (ver docs/designs/hand_interaction.md).
 
-"Apuntá con el índice y juntá dos dedos": la punta del índice apoyada en el papel
-elige la casilla, y juntar el medio con el índice durante hold_ms equivale a un clic
-sobre esa casilla. Con gesture = "dwell" alcanza con quedarse quieto.
+"Apoyá el índice en una casilla y sostené": la punta del índice apoyada en el papel
+elige la casilla, y quedarse quieto hold_ms (gesture = "dwell", el de por defecto)
+equivale a un clic sobre esa casilla. Con gesture = "touch" además hay que juntar el
+medio con el índice.
 """
 import math
 import time
@@ -22,9 +23,16 @@ def _d(a, b):
     return float(np.linalg.norm(np.asarray(a) - np.asarray(b)))
 
 
+def middle_ratio(lmw):
+    """Largo del medio relativo al índice: |w12-w0| / |w8-w0|. Estirado ~1, doblado ~0,5.
+    Relativo al índice (que apunta) y no a la propia falange: visto desde el lado de
+    enfrente los dos dedos se acortan igual y el ratio no cambia."""
+    return _d(lmw[12], lmw[0]) / max(1e-6, _d(lmw[8], lmw[0]))
+
+
 def middle_extended(lmw, thresh):
-    """Medio estirado: |w12-w0| / |w10-w0| > thresh. bool de Python (json.dumps)."""
-    return bool(_d(lmw[12], lmw[0]) / max(1e-6, _d(lmw[10], lmw[0])) > thresh)
+    """bool de Python (json.dumps)."""
+    return bool(middle_ratio(lmw) > thresh)
 
 
 def gesture_metric(gesture, lm2d, lmw, ext_thresh):
@@ -67,11 +75,13 @@ class Confirm:
     """Máquina de estados del gesto: la tabla de la sección 3 del design.
     update() -> casilla confirmada (una sola vez por intento) o None."""
 
-    def __init__(self, on, off, hold_ms, cancel_radius_m, cell_frames, rearm_on_move):
+    def __init__(self, on, off, hold_ms, cancel_radius_m, cell_frames, rearm_on_move, cell_ok=lambda c: True):
         self.on, self.off, self.hold_s = on, off, hold_ms / 1000
         self.radius, self.cell_frames, self.rearm_on_move = cancel_radius_m, cell_frames, rearm_on_move
         self.armed, self.lock_cell, self.lock_xy, self.t0, self.fired = True, None, None, None, False
         self.reason, self.shown, self.cand, self.cand_n, self.t_last = "", None, None, 0, 0
+        self.bad_n, self.dist = 0, None  # cuadros seguidos abierto/afuera; distancia a lock_xy (m)
+        self.cell_ok = cell_ok           # el juego dice si tocar esa casilla ahora tiene sentido
 
     @property
     def active(self):
@@ -110,11 +120,21 @@ class Confirm:
             self.armed = True
             return None
         if self.active:
-            if metric > self.off:
-                self._free("suelta", True)
-            elif xy is None or math.dist(xy, self.lock_xy) > self.radius:
-                self._free("salió", self.rearm_on_move)
-            elif not self.fired and t - self.t0 >= self.hold_s:
+            self.dist = None if xy is None else math.dist(xy, self.lock_xy)
+            opened = metric > self.off
+            out = self.dist is None or self.dist > self.radius
+            # Abrir o salir del radio tiene que durar cell_frames cuadros seguidos: un cuadro
+            # suelto de temblor del landmark (sobre todo desde el lado lejano) no cancela.
+            if opened or out:
+                self.bad_n += 1
+                if self.bad_n >= self.cell_frames:
+                    if opened:
+                        self._free("suelta", True)
+                    else:
+                        self._free("salió", self.rearm_on_move)
+                return None
+            self.bad_n = 0
+            if not self.fired and t - self.t0 >= self.hold_s:
                 self.fired = True
                 return self.lock_cell
             return None
@@ -126,17 +146,17 @@ class Confirm:
             return None
         if cell is None or xy is None:
             self.reason, self.armed = "afuera", self.rearm_on_move
-        elif cell == self.shown:
+        elif cell == self.shown and self.cell_ok(cell):
             self.lock_cell, self.lock_xy, self.t0, self.fired, self.reason = cell, tuple(xy), t, False, ""
-            self.cand, self.cand_n = None, 0
+            self.cand, self.cand_n, self.bad_n, self.dist = None, 0, 0, 0.0
         return None
 
 
-def hand_msg(conf, lm2d, metric, metric2d, extended, box_margin):
+def hand_msg(conf, lm2d, metric, metric2d, extended, box_margin, ext=None):
     """Dict que se publica en "hand" (+ "dbg" para el overlay). Solo floats/bools de
     Python: encode_frame hace json.dumps."""
     if lm2d is None:
-        return dict(NO_HAND, cell=conf.shown, dbg={"metric": None, "metric2d": None, "extended": False,
+        return dict(NO_HAND, cell=conf.shown, dbg={"metric": None, "metric2d": None, "ext": None, "extended": False,
                                                    "hold": 0, "lock_cell": None, "reason": conf.reason})
     hold = round(float(conf.hold), 2)
     (u0, v0), (u1, v1) = lm2d.min(axis=0), lm2d.max(axis=0)
@@ -146,8 +166,10 @@ def hand_msg(conf, lm2d, metric, metric2d, extended, box_margin):
             "px": [round(float(lm2d[8][0]), 1), round(float(lm2d[8][1]), 1)],
             "hold": hold, "box": box,
             "dbg": {"metric": None if math.isinf(metric) else round(float(metric), 3),
-                    "metric2d": round(float(metric2d), 3), "extended": bool(extended),
-                    "hold": hold, "lock_cell": conf.lock_cell, "reason": conf.reason}}
+                    "metric2d": round(float(metric2d), 3),
+                    "ext": None if ext is None else round(float(ext), 3), "extended": bool(extended),
+                    "hold": hold, "lock_cell": conf.lock_cell, "reason": conf.reason,
+                    "dist_mm": None if conf.dist is None else round(conf.dist * 1000, 1)}}
 
 
 def image_to_board(u, v, K, dist, rvec, tvec):
@@ -186,13 +208,15 @@ class HandTracker:
         return lm2d, lmw
 
 
-def hands_loop(get_packet, publish_hand, on_tap, stop, K, dist, spec, cfg):
+def hands_loop(get_packet, publish_hand, on_tap, stop, K, dist, spec, cfg, cell_ok=lambda c: True):
     """Hilo de manos. get_packet() -> último paquete del frame_bus (o None);
     publish_hand(dict) deja el campo "hand" (+ "dbg") para el próximo cuadro;
-    on_tap(cell) se llama cuando Confirm confirma un gesto (siempre con la pose ok)."""
+    on_tap(cell) se llama cuando Confirm confirma un gesto (siempre con la pose ok);
+    cell_ok(cell) dice si el anillo puede arrancar sobre esa casilla (ver Server.hand_cell_ok)."""
     p = gesture_params(cfg)
     tracker = HandTracker(cfg)
-    conf = Confirm(p["on"], p["off"], p["hold_ms"], p["cancel_radius_m"], p["cell_frames"], p["rearm_on_move"])
+    conf = Confirm(p["on"], p["off"], p["hold_ms"], p["cancel_radius_m"], p["cell_frames"], p["rearm_on_move"],
+                   cell_ok)
     last_id = None
     while not stop.is_set():
         pkt = get_packet()
@@ -218,4 +242,4 @@ def hands_loop(get_packet, publish_hand, on_tap, stop, K, dist, spec, cfg):
         tap = conf.update(metric, cell, xy, t)
         if tap is not None:
             on_tap(tap)
-        publish_hand(hand_msg(conf, lm2d, metric, metric_2d(lm2d), extended, p["box_margin"]))
+        publish_hand(hand_msg(conf, lm2d, metric, metric_2d(lm2d), extended, p["box_margin"], middle_ratio(lmw)))

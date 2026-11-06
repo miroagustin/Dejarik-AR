@@ -34,12 +34,12 @@ beta = 0.05
 d_cutoff = 1.0
 
 [hands]
-gesture = "touch"        # "touch" | "dwell"
+gesture = "dwell"        # "dwell": apoyar el índice y sostener · "touch": juntar índice y medio
 on = 0.35                # se calibra en E1 con la línea de debug
 off = 0.45
-extended_on = 1.15
-extended_off = 1.05
-hold_ms = 1000
+extended_on = 0.85       # medio estirado: |w12-w0| / |w8-w0| (largo del medio / largo del índice)
+extended_off = 0.75
+hold_ms = 1500           # tiempo que hay que sostener para confirmar
 cancel_radius_mm = 20
 cell_frames = 3
 box_margin = 0.15
@@ -60,6 +60,7 @@ tap_gap_s = 0.6
 
 [game]
 seed = 1
+cpu_human_side = 1       # modo cpu: 0 = el anfitrión juega los azules, 1 = los rojos (la PC abre con los azules)
 
 [anim]
 anim_timeout_s = 5

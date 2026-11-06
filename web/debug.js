@@ -3,16 +3,27 @@
 
 export function createDebug(canvas) {
   const ctx = canvas.getContext("2d");
-  let on = false, frames = 0, fps = 0, last = performance.now();
+  let on = false, frames = 0, fps = 0, last = performance.now(), mirror = false, W = 0;
+
+  // Con el espejo (#stage.mirror) el canvas se ve dado vuelta: el texto se dibuja
+  // espejado otra vez para que se lea. x es la posición en el cuadro.
+  function textAt(fn, x) {
+    if (!mirror) return fn(x);
+    ctx.save(); ctx.setTransform(-1, 0, 0, 1, W, 0); fn(W - x); ctx.restore();
+  }
 
   function line(text, y) {
-    ctx.fillStyle = "rgba(0,0,0,0.6)";
-    ctx.fillRect(8, y - 16, ctx.measureText(text).width + 10, 21);
-    ctx.fillStyle = "#7fffb0";
-    ctx.fillText(text, 13, y);
+    // Arriba a la izquierda de la pantalla, con o sin espejo.
+    textAt(x => {
+      ctx.fillStyle = "rgba(0,0,0,0.6)";
+      ctx.fillRect(x - 5, y - 16, ctx.measureText(text).width + 10, 21);
+      ctx.fillStyle = "#7fffb0";
+      ctx.fillText(text, x, y);
+    }, mirror ? W - 13 : 13);
   }
 
   return {
+    setMirror(m) { mirror = m; },
     toggle() { on = !on; canvas.classList.toggle("on", on); return on; },
     get on() { return on; },
 
@@ -23,6 +34,7 @@ export function createDebug(canvas) {
       if (now - last > 500) { fps = (frames * 1000) / (now - last); frames = 0; last = now; }
       if (!on || !header) return;
       const [w, h] = header.size;
+      W = w;
       if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
       ctx.clearRect(0, 0, w, h);
       ctx.font = "15px Consolas, monospace";
@@ -37,7 +49,7 @@ export function createDebug(canvas) {
           ctx.closePath();
           ctx.stroke();
           ctx.fillStyle = "#7fffb0";
-          ctx.fillText(String(dbg.ids[i]), quad[0][0], quad[0][1] - 4);
+          textAt(x => ctx.fillText(String(dbg.ids[i]), x, quad[0][1] - 4), quad[0][0]);
         });
       }
 
@@ -70,8 +82,8 @@ export function createDebug(canvas) {
       const hd = dbg?.hand;
       if (hd) {
         const f = v => (v == null ? "—" : v.toFixed(2));
-        line(`mano ${f(hd.metric)} (2D ${f(hd.metric2d)}) · medio ${hd.extended ? "estirado" : "doblado"} · ` +
-             `hold ${f(hd.hold)} · fijada ${hd.lock_cell ?? "—"} · ${hd.reason || "ok"}`, y);
+        line(`mano ${f(hd.metric)} (2D ${f(hd.metric2d)}) · medio ${f(hd.ext)} ${hd.extended ? "estirado" : "doblado"} · ` +
+             `hold ${f(hd.hold)} · fijada ${hd.lock_cell ?? "—"} · dist ${hd.dist_mm == null ? "—" : hd.dist_mm.toFixed(0) + " mm"} · ${hd.reason || "ok"}`, y);
       }
     },
   };

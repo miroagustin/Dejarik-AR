@@ -64,7 +64,10 @@ export function createEventQueue({ army, spec, hud, audio, onDone }) {
     while (queue.length) {
       const e = queue.shift();
       try {
-        await (handlers[e.kind] ?? (async () => {}))(e);
+        // Ningún evento puede trabar la cola: si una animación no termina en 8 s, se sigue.
+        const stuck = new Promise(r => setTimeout(() => r("stuck"), 8000));
+        if (await Promise.race([(handlers[e.kind] ?? (async () => {}))(e), stuck]) === "stuck")
+          console.warn("evento sin terminar en 8 s, sigo", e);
       } catch (err) {
         console.error("evento", e, err);
       }

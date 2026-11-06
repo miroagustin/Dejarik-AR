@@ -379,6 +379,7 @@ Hay dos formas de obtener el punto en el plano:
 
 ### Mano y pinch
 
+*   El gesto y su config se reemplazan por `docs/designs/hand_interaction.md`.
 *   MediaPipe Tasks `HandLandmarker` en modo VIDEO, con `num_hands = 1` y el modelo `.task` guardado localmente.
 *   El pinch se mide como `d(4,8) / d(0,9)`, con histéresis:
     *   empieza cuando baja de 0,25;
@@ -840,7 +841,7 @@ Hoy el repo solo tiene `Dejarik_AR_Brief.pdf`, `concepts_brief.md` y este docume
     *   `[camera]`: index, width, height, fourcc, autofocus, focus, exposure, wb;
     *   `[pose]`: max_reproj_px = 3, min_markers = 2, hold_ms = 500, lock_stable_s = 2, lock_max_dt_mm = 2, lock_max_drot_deg = 0.5;
     *   `[filter.t]` (traslación): min_cutoff = 1.0, beta = 0.5, d_cutoff = 1.0; `[filter.r]` (rotación): min_cutoff = 1.0, beta = 0.05, d_cutoff = 1.0. Son valores iniciales;
-    *   `[hands]`: pinch_on = 0.25, pinch_off = 0.35, pinch_ms = 300, input_width = 640;
+    *   `[hands]`: reemplazado por `docs/designs/hand_interaction.md` (gesture, on, off, hold_ms, …, input_width = 640);
     *   `[net]`: port = 8000, jpeg_quality = 80, remote_width = 854, remote_quality = 60, remote_max_fps = 15, cloudflared_path = "tools/bin/cloudflared.exe";
     *   `[ai]`: think_min_s = 0.4, think_max_s = 0.9, tap_gap_s = 0.6;
     *   `[game]`: seed;

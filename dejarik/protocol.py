@@ -39,8 +39,9 @@ def events_msg(events):
     return _text({"type": "events", "events": events})
 
 
-def hello_msg(you, mode, remote=None):
-    return _text({"type": "hello", "you": you, "mode": mode, "remote": remote})
+def hello_msg(you, mode, remote=None, role="host"):
+    """you: el bando del que recibe (0 azul, 1 rojo). role: "host" o "remote"."""
+    return _text({"type": "hello", "you": you, "mode": mode, "remote": remote, "role": role})
 
 
 def denied_msg(reason):

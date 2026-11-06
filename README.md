@@ -70,14 +70,14 @@ python -m dejarik --replay fixtures/session_01.dj   # sin cámara: video grabado
 ```
 
 - Abre Chrome en una ventana `--app` (la que se comparte en Teams). Con `--no-browser` no la abre; la URL del anfitrión es `http://127.0.0.1:8000/?p=0&k=` + el contenido de `save/host_token`.
-- **Turno:** clic o pinch (juntar pulgar e índice 0,3 s) sobre una pieza propia la selecciona y se iluminan sus destinos; sobre una casilla vacía iluminada se mueve, sobre un rival iluminado ataca.
+- **Turno:** clic, o apoyá el índice en una casilla y sostené (`hold_ms`, 1,5 s por defecto, con un anillo de carga) sobre una pieza propia la selecciona y se iluminan sus destinos; sobre una casilla vacía iluminada se mueve, sobre un rival iluminado ataca.
 - **Flags:** `--input mouse|hand|both`, `--record X.dj` (graba lo que ve el anfitrión), `--resume` (sigue la última partida, `save/state.json`).
-- **Teclas:** `D` overlay de debug, `L` bloquear la pose, `R` reiniciar, `P` cambiar de modo (`cpu → local → remote`), `M` silenciar.
+- **Teclas:** `D` overlay de debug, `L` bloquear la pose, `R` reiniciar, `P` cambiar de modo (`cpu → local → remote`), `M` silenciar, `F` espejar la vista (solo en ese navegador; queda guardado).
 - Sin `calib.npz` usa una K aproximada (avisa en la consola). Para la demo, calibrar.
 - **Visor de criaturas:** `http://127.0.0.1:8000/?viewer=bestia` (o `guardian`, `acechador`, `soldado`). Agregar `&side=1` la muestra en rojo y `&still=1` la deja quieta.
 - **Sonido:** se genera en el navegador (`web/audio.js`, sin archivos). `http://127.0.0.1:8000/?soundcheck` muestra el volumen pico de cada sonido; si alguno dice MUDO, está roto. En Teams hay que activar "compartir audio del sistema".
 - **Ajustes visuales:** el oscurecimiento del video está en `BACKGROUND_DIM` (`web/scene.js`). Las scanlines y el parpadeo están en `holoUniforms` (`web/hologram.js`). Se ajustan mirando la pantalla compartida en Teams.
-- **Ajustes de juego:** `KINDS` en `dejarik/game.py`; pesos del rival al principio de `dejarik/ai.py`; mano en `[hands]` de `config.toml`.
+- **Ajustes de juego:** bando del anfitrión contra la PC en `[game] cpu_human_side` (por defecto 1, rojos: abre la PC); `KINDS` en `dejarik/game.py`; pesos del rival al principio de `dejarik/ai.py`; mano en `[hands]` de `config.toml`, con el gesto en `[hands] gesture` (`touch` o `dwell`).
 
 ## Modo remoto
 

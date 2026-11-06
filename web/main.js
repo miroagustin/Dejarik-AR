@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { connect } from "./net.js";
-import { createScene } from "./scene.js";
+import { createScene, cellCenter } from "./scene.js";
 import { Army, Creature, KINDS, loadKinds } from "./creatures.js";
 import { holoUniforms } from "./hologram.js";
 import { createEventQueue } from "./events.js";
@@ -31,20 +31,20 @@ async function runGame() {
   const debug = createDebug(document.getElementById("debug"));
   const audio = createAudio();
 
-  let you = 0, lastHeader = null, legal = [], selectedCell = null, selectedId = null, poseAlpha = 1, aspect = 16 / 9;
+  let you = 0, isRemote = false, lastHeader = null, legal = [], selectedCell = null, selectedId = null, poseAlpha = 1, aspect = 16 / 9;
   let booted = false, net = null;
   const events = createEventQueue({
     army, spec, hud, audio,
-    onDone: id => { if (you === 0) net.send({ type: "anim_done", id }); },
+    onDone: id => { if (!isRemote) net.send({ type: "anim_done", id }); },
   });
 
   layout(view.renderer, aspect);
   addEventListener("resize", () => layout(view.renderer, aspect));
 
   net = connect({
-    hello(msg) { you = msg.you; hud.hello(msg); },
+    hello(msg) { you = msg.you; isRemote = msg.role === "remote"; hud.hello(msg); },
     state(msg) {
-      army.sync(msg.pieces);
+      army.sync(msg.pieces, !events.busy);
       if (!events.busy) army.snap(msg.pieces);
       hud.state(msg);
       if (msg.winner == null) hud.clearWin(); else hud.win(msg.winner);
@@ -61,32 +61,76 @@ async function runGame() {
       if (!booted && header.pose.ok) { booted = true; audio.play("boot"); audio.startHum(); }
       const a = header.size[0] / header.size[1];
       if (Math.abs(a - aspect) > 1e-3) { aspect = a; layout(view.renderer, aspect); }
-      if (you === 1) net.send({ type: "frame_ack", frame_id: header.frame_id });
+      if (isRemote) net.send({ type: "frame_ack", frame_id: header.frame_id });
     },
     onStatus(text) { hud.notice(text, text === "conectado" ? 1000 : 0); },
   });
 
+  // Espejo (tecla F): solo visual. Se guarda en el navegador.
+  let mirror = localStorage.getItem("mirror") === "1";
+  const setMirror = m => { mirror = m; stage.classList.toggle("mirror", m); debug.setMirror(m); localStorage.setItem("mirror", m ? "1" : "0"); };
+  setMirror(mirror);
+
   addEventListener("pointerdown", () => audio.unlock());
   glCanvas.addEventListener("click", ev => {
-    const p = view.boardPointFromClick(ev.clientX, ev.clientY);
+    const r = glCanvas.getBoundingClientRect();
+    const x = mirror ? r.left + r.right - ev.clientX : ev.clientX;
+    const p = view.boardPointFromClick(x, ev.clientY);
     if (p) net.send({ type: "click", x: p.x, y: p.y });
   });
 
   addEventListener("keydown", ev => {
     audio.unlock();
     if (ev.key.toLowerCase() === "m") { hud.notice(audio.toggleMute() ? "Sonido apagado" : "Sonido encendido"); return; }
+    if (ev.key.toLowerCase() === "f") { setMirror(!mirror); hud.notice(mirror ? "Espejo activado" : "Espejo desactivado"); return; }
     const key = { d: "debug", l: "lock", r: "reset", p: "mode" }[ev.key.toLowerCase()];
     if (!key) return;
     if (key === "debug") debug.toggle();
     net.send({ type: "key", key });
   });
 
-  const project = (x, y, z) => {
-    const v = new THREE.Vector3(x, y, z).applyMatrix4(view.board.matrix).applyMatrix4(view.camera.projectionMatrix);
+  // Punto en coordenadas de cámara (mundo) -> [u, v] en píxeles del cuadro, o null.
+  const toPx = v => {
     if (!lastHeader) return null;
+    v.applyMatrix4(view.camera.projectionMatrix);
     const [w, h] = lastHeader.size;
     return [(v.x + 1) / 2 * w, (1 - v.y) / 2 * h];
   };
+  const project = (x, y, z) => toPx(new THREE.Vector3(x, y, z).applyMatrix4(view.board.matrix));
+
+  // Gesto de la mano: anillo de carga, sonidos y pista. Todo sale de header.hand.
+  const ring = document.getElementById("hold-ring");
+  const tmp = new THREE.Vector3();
+  let prevHold = 0, prevHint = false;
+  function drawHand(h) {
+    const hold = h?.hold ?? 0;
+    if (isRemote) { ring.style.display = "none"; prevHold = hold; return; } // lo produce la mano del anfitrión
+    if (prevHold < 0.15 && hold >= 0.15) audio.play("holdStart");
+    if (prevHold >= 0.15 && prevHold < 1 && hold === 0) audio.play("holdCancel");
+    prevHold = hold;
+    const c = hold > 0 && h.cell != null && lastHeader.pose.ok ? project(...cellCenter(spec, h.cell), 0) : null;
+    if (c) {
+      const s = stage.clientWidth / lastHeader.size[0];
+      Object.assign(ring.style, { display: "block", left: `${c[0] * s + 40 - 22}px`, top: `${c[1] * s - 40 - 22}px` });
+      ring.style.setProperty("--p", hold);
+    } else ring.style.display = "none";
+    const show = h?.px != null;
+    if (show !== prevHint) { hud.hint(show); prevHint = show; }
+  }
+
+  // "Se deja atravesar": las criaturas cuya raíz cae en la caja de la mano se vuelven translúcidas.
+  function passThrough(h, dt) {
+    const box = lastHeader?.pose.ok ? h?.box : null;
+    army.byId.forEach(c => {
+      let target = 0;
+      if (box) {
+        const p = toPx(c.root.getWorldPosition(tmp));
+        if (p && p[0] >= box[0] && p[0] <= box[2] && p[1] >= box[1] && p[1] <= box[3]) target = 1;
+      }
+      if (Math.abs(c.pass - target) > 1e-3) c.setPass(c.pass + (target - c.pass) * Math.min(1, dt / 0.05));
+      else if (c.pass !== target) c.setPass(target);
+    });
+  }
 
   const clock = new THREE.Clock();
   view.renderer.setAnimationLoop(() => {
@@ -103,6 +147,10 @@ async function runGame() {
     }
     if (lastHeader && !ok) hud.notice("Tracking perdido", 0);
     else if (lastHeader && ok && document.getElementById("notice").textContent === "Tracking perdido") hud.notice("", 1);
+
+    const hand = lastHeader?.hand;
+    passThrough(hand, dt);
+    if (lastHeader) drawHand(hand);
 
     view.highlight(legal, lastHeader?.hand?.cell ?? null, selectedCell);
     view.render();

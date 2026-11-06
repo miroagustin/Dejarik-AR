@@ -107,7 +107,7 @@ def main(argv=None):
                 server.loop.call_soon_threadsafe(server.on_host_tap, cell)
             threading.Thread(target=hands_loop, daemon=True,
                              args=(server.bus.get, hands_box.put, on_tap, stop, K, dist, spec,
-                                   cfg["hands"])).start()
+                                   cfg["hands"], server.hand_cell_ok)).start()
 
     host_url = f"http://127.0.0.1:{port}/?p=0&k={htok}"
 

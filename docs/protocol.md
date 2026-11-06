@@ -1,6 +1,6 @@
 # Protocolo v1 y convención de coordenadas
 
-**Se congela el día 2.** Para cambiar algo de este archivo, se sube `v` y se cambian Python y el navegador en el mismo commit. Cada lado ignora los campos que no conoce.
+**Se congela el día 2.** Agregar un campo opcional no sube `v`, porque cada lado ignora los campos que no conoce. Cambiar o quitar un campo sí: se sube `v` y se cambian Python y el navegador en el mismo commit.
 
 Fuente: [docs/designs/dejarik_ar.md](designs/dejarik_ar.md), secciones "Convención de coordenadas", "Protocolo WebSocket v1" e ítems 7 y 22.
 
@@ -57,17 +57,25 @@ La casilla `12+k` queda detrás de la `k`. La geometría está en [board_spec.js
  "pose":{"ok":true,"T":[1,0,0,0, 0,0.766,0.643,0, 0,-0.643,0.766,0, 0,0,-0.6,1],
          "n_markers":12,"reproj_px":0.4,"locked":false},
  "K":[900,900,640,360],"size":[1280,720],
- "hand":{"cell":null,"pinch":false,"px":null}}
+ "hand":{"cell":null,"pinch":false,"px":null,"hold":0,"box":null}}
 ```
 
 - `K` y `size` van en todos los cuadros. Para el remoto, se mandan escalados a 854×480.
-- `hand.px` es `[u, v]` en píxeles del cuadro, o `null`.
+- `hand.px` es la punta del índice, `[u, v]` en píxeles del cuadro, o `null`.
+- `hand.pinch` significa "gesto cerrado" (el nombre queda por v1). `hand.cell` es la casilla resaltada; durante el gesto, la fijada.
+- `hand.hold` es el progreso del gesto, de 0 a 1. Vale 1 desde que se confirma hasta que se suelta. Si baja de un valor menor que 1 a 0, el gesto se canceló.
+- `hand.box` es `[u0, v0, u1, v1]`, la caja de la mano en píxeles del cuadro, o `null`.
+- En el remoto, `px` y `box` van escalados como `K`.
+- `hold` y `box` son opcionales para quien lee: los `.dj` viejos no los tienen (`hold ?? 0`, `box ?? null`).
 - `debug` solo va cuando el overlay está activo:
 
   ```json
   "debug":{"corners":[[[u,v],[u,v],[u,v],[u,v]]],"ids":[0],"T_raw":[16 floats],
-           "ms":{"read":3,"detect":6,"pnp":1,"filter":0.1,"jpeg":5},"pinch_ratio":0.4}
+           "ms":{"read":3,"detect":6,"pnp":1,"filter":0.1,"jpeg":5},
+           "hand":{"metric":0.4,"metric2d":0.5,"extended":true,"hold":0.6,"lock_cell":7,"reason":""}}
   ```
+
+  `debug.hand.reason` vale `""`, `"suelta"`, `"salió"`, `"sin mano"` o `"afuera"`. `metric` es `null` cuando el medio está doblado.
 
 ### `state`: texto, en cada cambio
 
@@ -112,10 +120,12 @@ La casilla `12+k` queda detrás de la `k`. La geometría está en [board_spec.js
 ### `hello`: al conectar, y cuando cambia el modo o el estado del remoto
 
 ```json
-{"v":1,"type":"hello","you":0,"mode":"remote",
+{"v":1,"type":"hello","you":0,"mode":"remote","role":"host",
  "remote":{"url":"https://xxx.trycloudflare.com/?p=1&k=...","tunnel":"up","connected":false}}
 ```
 
+- `you` es el bando del que recibe (0 azul, 1 rojo). En modo `cpu`, el anfitrión juega `[game] cpu_human_side` de `config.toml` y la PC el otro bando. Si la PC juega los azules, abre ella en cuanto se conecta el anfitrión.
+- `role` es `"host"` o `"remote"` (campo opcional, agregado sin subir `v`). El navegador lo usa para el `frame_ack` y para no mostrar el anillo de la mano en el remoto; antes eso salía de `you`.
 - `remote` solo se le manda al anfitrión.
 - `tunnel` puede valer `up`, `down` u `off`.
 

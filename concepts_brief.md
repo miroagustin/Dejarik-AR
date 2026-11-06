@@ -159,9 +159,9 @@ El auto-rig de Mixamo solo funciona con figuras humanoides, y la mayoría de los
   - Resaltar la casilla que está bajo el dedo, para que el jugador corrija solo. Esto es lo que más ayuda.
   - Aceptar el pinch solo cerca de la superficie.
   - Pasar el píxel del dedo por `cv2.undistortPoints` antes de proyectarlo.
-- **Detección del pinch:**
+- **Detección del pinch** (reemplazado por `docs/designs/hand_interaction.md`):
   - Usar la distancia entre los puntos 4 y 8 dividida por la distancia entre los puntos 0 y 9, para que no dependa de qué tan lejos esté la mano.
-  - Aplicar histéresis: el pinch empieza por debajo de 0,25 y termina por encima de 0,35.
+  - Aplicar histéresis (`[hands] on/off` en `config.toml`).
   - Exigir que dure unos 300 ms.
   - Seguir una sola mano: `max_num_hands=1`.
 - **Estados a definir:** hover, seleccionar, confirmar, cancelar, aviso de casilla ilegal, y qué pasa cuando la mano tapa los marcadores.

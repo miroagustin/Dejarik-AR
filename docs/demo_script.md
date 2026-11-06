@@ -17,7 +17,7 @@
 |---|---|
 | Antes | El anfitrión corre `python -m dejarik --mode remote` y pega el link en el chat. El remoto ya está conectado. Con `P` se pasa a `cpu`. |
 | 0:00–0:20 | Arranca la pantalla compartida. Se detecta el tablero, suena el "encendido" y aparecen las 8 criaturas. El narrador lee las reglas. |
-| 0:20–1:10 | Partida **contra la PC**: el anfitrión mueve, la PC responde ("La PC está pensando…") y hay al menos 1 combate con dados. |
+| 0:20–1:10 | Partida **contra la PC**: el anfitrión mueve con la mano; el narrador dice: «Apoyá el índice en una casilla y sostené». La PC responde ("La PC está pensando…") y hay al menos 1 combate con dados. |
 | 1:10–1:20 | Se aprieta `P` dos veces para pasar a **remoto**. El HUD muestra "Jugador 1 conectado". |
 | 1:20–2:20 | Partida **remota**: el integrante desde su casa mueve las rojas y hay al menos 1 combate más. |
 | 2:20–2:40 | El anfitrión mete la mano y tapa marcadores: las criaturas siguen ancladas. |
@@ -40,6 +40,7 @@
 | Falla | Qué hacer | Tecla o flag | Tiempo medido |
 |---|---|---|---|
 | La mano no responde | Seguir con el mouse | `--input mouse`, o simplemente usar el mouse | — |
+| La mano confirma sin querer | Subir el tiempo de sostén y reiniciar | `hold_ms` en `[hands]` de `config.toml` | — |
 | El remoto se cae o el túnel no levanta | Pasar a local o contra la PC | `P` | — |
 | El tracking tiembla por la luz | Bloquear la pose | `L` | — |
 | Python se cuelga | Relanzarlo con el estado guardado (Chrome se reconecta solo) | `python -m dejarik --resume` | — |

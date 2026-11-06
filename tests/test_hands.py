@@ -7,7 +7,7 @@ import pytest
 
 from dejarik.board import cell_at, cell_center, load_spec
 from dejarik.config import load_config
-from dejarik.hands import Confirm, gesture_metric, gesture_params, hand_msg, image_to_board
+from dejarik.hands import Confirm, gesture_metric, gesture_params, hand_msg, image_to_board, middle_extended
 from test_vision import DIST, K, true_pose
 
 SPEC = load_spec()
@@ -170,15 +170,15 @@ def hand_lmw(bent=False):
 
 def test_gesture_metric():
     lm2d = np.zeros((21, 2))
-    assert gesture_metric("touch", lm2d, hand_lmw(), 1.15) < 0.35
-    assert gesture_metric("touch", lm2d, hand_lmw(bent=True), 1.05) == math.inf
-    assert gesture_metric("dwell", lm2d, hand_lmw(), 1.15) == 0.0
+    assert gesture_metric("touch", lm2d, hand_lmw(), 0.85) < 0.35
+    assert gesture_metric("touch", lm2d, hand_lmw(bent=True), 0.75) == math.inf
+    assert gesture_metric("dwell", lm2d, hand_lmw(), 0.85) == 0.0
     with pytest.raises(ValueError):
-        gesture_metric("pinch", lm2d, hand_lmw(), 1.15)
+        gesture_metric("pinch", lm2d, hand_lmw(), 0.85)
 
 
 def test_gesture_params():
-    cfg = dict(load_config()["hands"])
+    cfg = dict(load_config()["hands"], gesture="touch")
     p = gesture_params(cfg)
     assert p["gesture"] == "touch" and not p["rearm_on_move"]
     assert abs(p["cancel_radius_m"] - cfg["cancel_radius_mm"] / 1000) < 1e-12
@@ -197,3 +197,39 @@ def test_hand_msg():
     assert hand_msg(c, lm2d, 0.0, 0.4, False, 0.15)["dbg"]["metric"] == 0.0
     json.dumps(m)
     json.dumps(hand_msg(c, None, None, None, False, 0.15))
+
+
+def test_middle_extended_from_far_side():
+    # Desde el lado de enfrente MediaPipe acorta los dos dedos (puntas más cerca de la
+    # palma). Relativo al índice, el medio sigue contando como estirado.
+    w = hand_lmw()
+    w[8] *= 0.6
+    w[12] *= 0.6
+    assert middle_extended(w, 0.85)
+    assert not middle_extended(hand_lmw(bent=True), 0.75)
+
+
+def test_confirm_ignores_one_frame_jitter():
+    # Un cuadro suelto fuera del radio (o abierto) no cancela; cell_frames seguidos sí.
+    c = touch(cell_frames=3)
+    for i in range(3):
+        c.update(CLOSED, 5, at(5), i / 30)
+    assert c.active
+    t0 = 2 / 30
+    c.update(CLOSED, 5, at(5, 0.040), t0 + 0.05)   # salto de 40 mm, un cuadro
+    c.update(OPEN, 5, at(5), t0 + 0.10)             # abierto, un cuadro
+    assert c.active and c.reason == ""
+    assert c.update(CLOSED, 5, at(5), t0 + 1.0) == 5
+    for k in range(3):
+        c.update(CLOSED, 5, at(5, 0.040), t0 + 1.1 + k / 30)
+    assert not c.active
+
+
+def test_confirm_only_locks_valid_cells():
+    # El anillo arranca solo donde el juego acepta el toque (cell_ok); sobre otra casilla espera.
+    ok = {5}
+    c = Confirm(0.5, 0.5, 1000, 0.02, 1, True, cell_ok=lambda cell: cell in ok)
+    c.update(0.0, 6, at(6), 0.0)
+    assert not c.active and c.hold == 0
+    c.update(0.0, 5, at(5), 0.1)
+    assert c.active and c.lock_cell == 5

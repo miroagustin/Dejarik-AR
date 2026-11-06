@@ -1,7 +1,7 @@
 # Interacción con la mano: apuntar con el índice, confirmar con dos dedos y "atravesar" el holograma
 
 *   **Author:** miroagustin
-*   **Status:** Draft
+*   **Status:** Implemented (E1-E3). Después de la primera prueba con cámara el gesto por defecto pasó a `dwell` con `hold_ms = 1500` (ver "Cambios después de la prueba").
 *   **Date:** 2026-11-06
 
 --------------------------------------------------------------------------------
@@ -138,10 +138,13 @@ actual medido con el overlay de debug).
     cuadros tarde.
 *   **OQ2 (abierta: la cierra E1): los valores por defecto de "medio
     estirado".** El Technical Plan
-    propone la fórmula `|w12-w0| / |w10-w0|` sobre world landmarks, con
-    `extended_on = 1.15` y `extended_off = 1.05`. Los números salen de
-    proporciones típicas de la mano (palma ~9 cm, dedo medio ~8 cm), no de
-    mediciones. Se confirman con los histogramas de E1.
+    propone la fórmula `|w12-w0| / |w8-w0|` sobre world landmarks, con
+    `extended_on = 0.85` y `extended_off = 0.75`. Los números salen de
+    proporciones típicas de la mano (el medio estirado mide como el índice; doblado,
+    ~la mitad), no de mediciones. Se confirman en E1 con el valor `medio` de la
+    línea de debug. La fórmula anterior, `|w12-w0| / |w10-w0|`, falló en la
+    primera prueba desde el lado rojo: con los dedos apuntando a la cámara,
+    MediaPipe acorta el medio y lo daba por doblado.
 *   **OQ4 (resuelta): el radio de cancelación es 20 mm, medido desde el punto
     donde se fijó el dedo** (sección 3). En el tablero real (`board_spec.json`
     escalado), la casilla interior mide ~37 mm en dirección radial y ~28 mm de
@@ -204,10 +207,11 @@ absolutas.
 | `"touch"` (por defecto) | `d3(w8,w12) / d3(w0,w9)` si el medio está estirado; si no, `inf` (cuenta como "abierto") | `[hands] on, off` |
 | `"dwell"` | `0.0` siempre: se confirma con solo quedarse quieto | ninguno; vale `hold_ms`, y re-arma al moverse (`rearm_on_move`) |
 
-**"Medio estirado"** se calcula como `|w12-w0| / |w10-w0|`: la distancia de la
-muñeca a la punta del medio dividida por la distancia de la muñeca a la
-articulación media (PIP) del medio. Con el dedo estirado se estima ~1,25, y con el
-dedo doblado da menos de 1. Para empezar el gesto el ratio tiene que superar
+**"Medio estirado"** se calcula como `|w12-w0| / |w8-w0|`: la distancia de la
+muñeca a la punta del medio dividida por la distancia de la muñeca a la punta del
+índice, que es el dedo que apunta. Con el medio estirado se estima ~1, y doblado
+~0,5. Se compara con el índice y no con la propia falange porque, desde el lado
+de enfrente, los dos dedos se ven acortados por igual y el ratio no cambia. Para empezar el gesto el ratio tiene que superar
 `extended_on`. Una vez empezado, alcanza con que supere `extended_off`, que es
 más bajo, para que el temblor cerca del umbral no cancele el gesto.
 
@@ -240,8 +244,8 @@ la primera fila que corresponda:
 | libre, armado | cerrado y (`cell None` o `xy None`) | libre; `reason = "afuera"`; queda armado solo si `rearm_on_move` |
 | libre, armado | cerrado y `cell != shown` | libre y armado, sin cambiar `reason`: espera a que el resaltado alcance al dedo |
 | libre, armado | cerrado | fijado: `lock_cell = shown`, `lock_xy = xy`, `t0 = t`, `fired = False`, `reason = ""` |
-| fijado | abierto | libre y armado; `reason = "suelta"` si no había disparado |
-| fijado | `xy None` o `math.dist(xy, lock_xy) > cancel_radius_m` | libre; `reason = "salió"` si no había disparado; queda armado solo si `rearm_on_move` |
+| fijado | abierto durante `cell_frames` cuadros seguidos | libre y armado; `reason = "suelta"` si no había disparado |
+| fijado | `xy None` o `math.dist(xy, lock_xy) > cancel_radius_m`, durante `cell_frames` cuadros seguidos (mientras tanto no dispara) | libre; `reason = "salió"` si no había disparado; queda armado solo si `rearm_on_move` |
 | fijado, sin disparar | `t - t0 >= hold_ms / 1000` | disparado: `update` devuelve `lock_cell`, una sola vez |
 
 *   **La casilla fijada es la resaltada.** `lock_cell` sale de `shown`, la
@@ -254,6 +258,10 @@ la primera fila que corresponda:
     desde el centro de la casilla. La casilla 0 tiene ~35 mm de radio, así que
     medir desde el centro cancelaría por sí solo un toque cerca del borde. `xy` está
     en metros (`board.py`), y `cancel_radius_m = cancel_radius_mm / 1000`.
+*   **Un cuadro suelto no cancela.** Abrir o salir del radio tiene que durar
+    `cell_frames` cuadros seguidos. En la primera prueba desde el lado rojo, un
+    salto de un cuadro del landmark 8 cancelaba el gesto apenas se fijaba. La
+    distancia a `lock_xy` va en `dbg.dist_mm` para calibrar `cancel_radius_mm`.
 *   **Un intento** es un ciclo armado → fijado → libre. Después de cancelar o de
     disparar hay que abrir los dedos (o sacar la mano) para volver a armar.
 *   **En `dwell`** la métrica nunca abre, así que `rearm_on_move = True`: salir
@@ -313,8 +321,8 @@ La casilla que se publica en `hand.cell` es:
 gesture = "touch"        # "touch" | "dwell"
 on = 0.35                # se calibra con histogramas (E1)
 off = 0.45
-extended_on = 1.15
-extended_off = 1.05
+extended_on = 0.85
+extended_off = 0.75
 hold_ms = 1000
 cancel_radius_mm = 20
 cell_frames = 3
@@ -554,6 +562,27 @@ técnico de cada una.
 
 --------------------------------------------------------------------------------
 
+## Cambios después de la prueba (2026-11-06)
+
+1.  **El gesto por defecto es `dwell`**: se apoya el índice en una casilla y se
+    sostiene 1,5 s (`hold_ms = 1500`; primero se probó con 3 s y era mucho). Con `touch` (juntar índice y medio), desde el
+    lado rojo el gesto no llegaba a confirmar. `touch` sigue disponible por config.
+2.  **La frase del gesto (G7)** pasa a ser "Apoyá el índice en una casilla y
+    sostené" (`HINT` en `hud.js`, README, `docs/rules.md` y el guion).
+3.  **"Medio estirado"** se mide relativo al índice (`|w12-w0| / |w8-w0|`), y abrir
+    o salir del radio tiene que durar `cell_frames` cuadros para cancelar.
+4.  **Modo cpu:** el anfitrión juega `[game] cpu_human_side` (por defecto los
+    rojos) y la PC abre con los azules.
+5.  **El anillo solo arranca sobre una casilla válida** (`Server.hand_cell_ok`, que
+    `hands_loop` recibe como `cell_ok`): tu turno, sin animaciones en curso y, en
+    `select`, una pieza tuya; en `target`, un destino o ataque legal o una pieza tuya.
+6.  **El dibujo no se traba después de una muerte:** la criatura muerta la saca el
+    evento `death` al terminar su animación (antes la sacaba el `state`, a veces en
+    medio de un clip que entonces no terminaba nunca), `play()` tiene un respaldo
+    por tiempo y la cola de eventos sigue si un evento no termina en 8 s.
+
+--------------------------------------------------------------------------------
+
 ## Detailed Implementation Plan
 
 Los archivos están ordenados por etapa. Cada etapa se entrega y se prueba por
@@ -585,8 +614,9 @@ opcionales (`hand.hold ?? 0`, `hand.box ?? null`). Así siguen andando los
         *   `lmw` es un array (21, 3) armado con
             `res.hand_world_landmarks[0]` (`p.x, p.y, p.z`).
     *   `def middle_extended(lmw, thresh) -> bool`: devuelve
-        `bool(|w12-w0| / max(1e-6, |w10-w0|) > thresh)`, un `bool` de Python y
-        no `np.bool_`, para que `json.dumps` lo acepte.
+        `bool(middle_ratio(lmw) > thresh)`, con `middle_ratio = |w12-w0| /
+        max(1e-6, |w8-w0|)`, un `bool` de Python y no `np.bool_`, para que
+        `json.dumps` lo acepte. `middle_ratio` también va en `dbg.ext`.
     *   `def gesture_metric(gesture, lm2d, lmw, ext_thresh) -> float`:
         *   `"touch"`: `|w8-w12| / max(1e-6, |w0-w9|)` si
             `middle_extended(lmw, ext_thresh)`; si no, `math.inf`;
@@ -742,8 +772,9 @@ opcionales (`hand.hold ?? 0`, `hand.box ?? null`). Así siguen andando los
         todavía no es `shown` no fija hasta que `shown` la alcanza.
     *   `test_gesture_metric`: con un `lmw` sintético de la mano abierta y el
         medio estirado, más el índice y el medio juntos, `"touch"` da un valor
-        menor que `on`. Con el medio doblado (`|w12-w0| / |w10-w0|` por debajo
-        de `extended_off`) da `inf`. `"dwell"` da `0.0` y un nombre
+        menor que `on`. Con el medio doblado (`|w12-w0| / |w8-w0|` por debajo
+        de `extended_off`) da `inf`. `test_middle_extended_from_far_side`: con
+        las dos puntas acortadas por igual, el medio sigue estirado. `"dwell"` da `0.0` y un nombre
         desconocido levanta `ValueError`.
     *   `test_gesture_params`: `dwell` da `rearm_on_move` verdadero, y
         `cancel_radius_mm = 20` da `cancel_radius_m == 0.02`.
