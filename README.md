@@ -9,20 +9,11 @@ Diseño completo: [docs/designs/dejarik_ar.md](docs/designs/dejarik_ar.md).
 
 ## Estado
 
-Están listos los entregables de los días 1–2:
-
-- `board_spec.json`
-- los documentos congelados (`docs/`)
-- `dejarik/board.py`
-- `protocol.encode_frame` y `protocol.decode_frame`
-- el formato `.dj`
-- las herramientas para imprimir, calibrar y generar la sesión falsa
-
-El resto (`vision`, `game`, `transport`, `web/`…) sigue el calendario del diseño.
+Está implementado todo el diseño: visión (`vision`, `one_euro`), mano (`hands`), reglas (`game`), rival automático (`ai`), servidor y modos (`transport`), túnel (`tunnel`), grabación y replay (`recording`) y el navegador (`web/`). Falta lo que se hace en la casa del anfitrión: `calib.npz`, el ajuste de la mano y los ensayos por Teams.
 
 ## Instalación (Windows)
 
-Hace falta **Python 3.11**. mediapipe no tiene versiones para 3.13 o posteriores.
+Hace falta **Python 3.11** con las versiones de `requirements.txt`. También anda en Python 3.14 con opencv-contrib 5.0, mediapipe 1.0.1, numpy 2.5 y websockets 15.
 
 ```powershell
 py install 3.11                       # si no está instalado
@@ -50,10 +41,11 @@ python -c "import cv2.aruco, mediapipe.tasks; print('ok')"
 ## Calibrar la webcam
 
 ```powershell
-python tools/calibrate.py
+python tools/calibrate.py            # con el damero (print/checker.pdf, hoja A4 aparte)
+python tools/calibrate.py --tablero  # sin imprimir nada más: con los marcadores del tablero del juego
 ```
 
-1. Mostrar el damero impreso en distintas posiciones e inclinaciones.
+1. Mostrar el damero (o el tablero, con al menos 8 marcadores a la vista) en distintas posiciones e inclinaciones.
 2. Apretar `ESPACIO` para guardar cada vista. Hacen falta al menos 15.
 3. Apretar `C` para calibrar.
 4. Si el error (RMS) es menor a 0,5 px, se guarda `calib.npz`.
@@ -68,36 +60,36 @@ python tools/fake_session.py   # genera fixtures/session_01.dj
 
 Son 90 cuadros sintéticos del tablero, con la pose real en el header. El formato está en [docs/protocol.md](docs/protocol.md).
 
-## Probar el render sin cámara ni juego
-
-Mientras no existan `transport.py` y `game.py`, hay un servidor de desarrollo:
+## Jugar
 
 ```powershell
-python tools/dev_server.py                # reproduce fixtures/session_01.dj
-python tools/dev_server.py --autoplay     # además juega solo una partida guionada
+python -m dejarik                         # contra la PC, con la webcam, mouse y mano
+python -m dejarik --mode local            # dos jugadores en la misma máquina (pass-and-play)
+python -m dejarik --mode remote           # abre el túnel e imprime el link para el remoto
+python -m dejarik --replay fixtures/session_01.dj   # sin cámara: video grabado en loop, juego en vivo
 ```
 
-- Abrir `http://127.0.0.1:8000/?p=0`. Cada clic avanza la partida guionada (mover, atacar, golpe, contragolpe, muerte). `R` la reinicia y `D` muestra el overlay de debug.
+- Abre Chrome en una ventana `--app` (la que se comparte en Teams). Con `--no-browser` no la abre; la URL del anfitrión es `http://127.0.0.1:8000/?p=0&k=` + el contenido de `save/host_token`.
+- **Turno:** clic o pinch (juntar pulgar e índice 0,3 s) sobre una pieza propia la selecciona y se iluminan sus destinos; sobre una casilla vacía iluminada se mueve, sobre un rival iluminado ataca.
+- **Flags:** `--input mouse|hand|both`, `--record X.dj` (graba lo que ve el anfitrión), `--resume` (sigue la última partida, `save/state.json`).
+- **Teclas:** `D` overlay de debug, `L` bloquear la pose, `R` reiniciar, `P` cambiar de modo (`cpu → local → remote`), `M` silenciar.
+- Sin `calib.npz` usa una K aproximada (avisa en la consola). Para la demo, calibrar.
 - **Visor de criaturas:** `http://127.0.0.1:8000/?viewer=bestia` (o `guardian`, `acechador`, `soldado`). Agregar `&side=1` la muestra en rojo y `&still=1` la deja quieta.
-- **Sonido:** se genera en el navegador (`web/audio.js`, sin archivos). Suena desde el primer clic o tecla. `M` silencia. `http://127.0.0.1:8000/?soundcheck` muestra el volumen pico de cada sonido; si alguno dice MUDO, está roto. En Teams hay que activar "compartir audio del sistema".
+- **Sonido:** se genera en el navegador (`web/audio.js`, sin archivos). `http://127.0.0.1:8000/?soundcheck` muestra el volumen pico de cada sonido; si alguno dice MUDO, está roto. En Teams hay que activar "compartir audio del sistema".
 - **Ajustes visuales:** el oscurecimiento del video está en `BACKGROUND_DIM` (`web/scene.js`). Las scanlines y el parpadeo están en `holoUniforms` (`web/hologram.js`). Se ajustan mirando la pantalla compartida en Teams.
+- **Ajustes de juego:** `KINDS` en `dejarik/game.py`; pesos del rival al principio de `dejarik/ai.py`; mano en `[hands]` de `config.toml`.
+
+## Modo remoto
+
+- Descargar `cloudflared.exe` (de github.com/cloudflare/cloudflared, sección Releases) en `tools/bin/`.
+- No debe existir `%USERPROFILE%\.cloudflared\config.yml`.
+- El link para el jugador remoto aparece en la consola y en el HUD del anfitrión. Si el túnel falla, se sigue en `local` o `cpu` con `P`.
 
 ## Tests
 
 ```powershell
 pytest -q
 ```
-
-## Más adelante (según el diseño)
-
-- **Correr el juego:**
-  - `python -m dejarik --mode cpu|local|remote`
-  - Flags: `--input mouse|hand|both`, `--replay`, `--record`, `--resume` y `--no-browser`.
-  - Teclas: `D` overlay de debug, `L` bloquear la pose, `R` reiniciar, `P` cambiar de modo, `M` silenciar.
-- **Modo remoto:**
-  - Descargar `cloudflared.exe` (de github.com/cloudflare/cloudflared, sección Releases) en `tools/bin/`.
-  - No debe existir `%USERPROFILE%\.cloudflared\config.yml`.
-  - El link para el jugador remoto aparece en la consola y en el HUD del anfitrión.
 
 ## Glosario
 

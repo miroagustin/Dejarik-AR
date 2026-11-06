@@ -2,6 +2,8 @@
 
 const NAMES = { guardian: "Guardián", bestia: "Bestia", acechador: "Acechador", soldado: "Soldado" };
 const SIDES = ["AZUL", "ROJO"];
+// El nombre del gesto (G7): la misma frase va en el README, docs/rules.md y el guion.
+export const HINT = "Apuntá con el índice y juntá dos dedos";
 
 const $ = id => document.getElementById(id);
 
@@ -67,5 +69,6 @@ export function createHud() {
       b.className = `on p${w}`;
     },
     clearWin() { $("banner").className = ""; },
+    hint(show) { $("hint").textContent = show ? HINT : ""; },
   };
 }

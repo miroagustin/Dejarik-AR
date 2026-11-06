@@ -22,6 +22,8 @@ function layout(renderer, aspect) {
 
 async function runGame() {
   const spec = await (await fetch("board_spec.json")).json();
+  // Igual que board.load_spec: los radios se corrigen por lo que mide la regla impresa.
+  for (const k in spec.radii_m) spec.radii_m[k] *= spec.print_scale_measured / 100;
   const view = createScene(glCanvas, spec);
   const models = await loadKinds();
   const army = new Army(view.boardY, models, spec);

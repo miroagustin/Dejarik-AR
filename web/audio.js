@@ -96,6 +96,9 @@ export function createAudio(ctx = new AudioContext()) {
     },
     // Entrada rechazada: zumbido grave corto.
     denied() { tone({ freq: 140, dur: 0.18, type: "square", gain: 0.3 }); },
+    // Gesto de la mano: tic al empezar a sostener, descendente corto si se cancela.
+    holdStart() { tone({ freq: 1200, dur: 0.04, type: "sine", gain: 0.15 }); },
+    holdCancel() { tone({ freq: 500, to: 300, dur: 0.15, type: "triangle", gain: 0.2 }); },
   };
 
   // Zumbido de fondo del holograma: dos senos graves desafinados, muy bajo.

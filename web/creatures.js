@@ -47,6 +47,8 @@ class Creature {
   constructor(gltf, owner) {
     this.root = SkeletonUtils.clone(gltf.scene);
     this.materials = [];
+    this.baseOpacity = 1; // la escriben el tracking (main.js) y la muerte (events.js)
+    this.pass = 0;        // 0..1, "se deja atravesar" por la mano
     this.root.traverse(o => {
       if (o.isMesh) {
         o.material = makeHologramMaterial(SIDE_COLORS[owner]);
@@ -99,7 +101,16 @@ class Creature {
     await this.play("idle");
   }
 
-  setOpacity(o) { this.materials.forEach(m => { m.opacity = o; }); }
+  setOpacity(o) { this.baseOpacity = o; this.applyOpacity(); }
+  setPass(p) {
+    this.pass = p;
+    this.materials.forEach(m => { m.userData.pass.value = p; });
+    this.applyOpacity();
+  }
+  applyOpacity() {
+    const o = this.baseOpacity * (1 - 0.65 * this.pass);
+    this.materials.forEach(m => { m.opacity = o; });
+  }
   setFlash(f) { this.materials.forEach(m => { m.userData.flash.value = f; }); }
 }
 
@@ -134,6 +145,8 @@ export class Army {
         c = new Creature(this.models[p.kind], p.owner);
         this.byId.set(p.id, c);
         this.parent.add(c.root);
+        // Hechas para el tablero A2 (escala 100); en uno impreso achicado, se achican igual.
+        c.root.scale.multiplyScalar(this.spec.print_scale_measured / 100);
         const [x, y] = cellCenter(this.spec, p.cell);
         c.root.position.copy(boardToLocal(x, y));
         c.face(0, 0); // al empezar, todas miran al centro

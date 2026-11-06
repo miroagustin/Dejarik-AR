@@ -39,3 +39,24 @@ def test_view_matrix_of_identity_is_the_axis_flip():
 def test_view_matrix_is_column_major():
     T = to_view_matrix([0, 0, 0], [1, 2, 3])
     assert T[12:15] == [1, -2, -3]  # la traslación va en los elementos 12–14 (Three.js)
+
+
+def test_parse_client_filters():
+    from dejarik.protocol import parse_client
+    assert parse_client('{"v":1,"type":"click","x":0.1,"y":-0.2}')["x"] == 0.1
+    assert parse_client('{"v":2,"type":"click","x":0,"y":0}') is None
+    assert parse_client('{"v":1,"type":"hack"}') is None
+    assert parse_client('{"v":1,"type":"click","x":"a","y":0}') is None
+    assert parse_client('{"v":1,"type":"key","key":"format_c"}') is None
+    assert parse_client("no es json") is None
+    assert parse_client('{"v":1,"type":"anim_done","id":3}')["id"] == 3
+
+
+def test_state_msg_animating_and_legal():
+    import json
+    from dejarik.game import apply, new_game
+    from dejarik.protocol import state_msg
+    s, _ = apply(new_game(0), ("tap", 13))
+    m = json.loads(state_msg(s, animating=True))
+    assert m["phase"] == "animating" and m["selected"] == 2 and m["legal"] == [0, 1, 2, 12]
+    assert m["pieces"][0] == {"id": 0, "owner": 0, "kind": "guardian", "cell": 23, "hp": 3, "alive": True}

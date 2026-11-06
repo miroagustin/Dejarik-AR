@@ -34,9 +34,15 @@ beta = 0.05
 d_cutoff = 1.0
 
 [hands]
-pinch_on = 0.25
-pinch_off = 0.35
-pinch_ms = 300
+gesture = "touch"        # "touch" | "dwell"
+on = 0.35                # se calibra en E1 con la línea de debug
+off = 0.45
+extended_on = 1.15
+extended_off = 1.05
+hold_ms = 1000
+cancel_radius_mm = 20
+cell_frames = 3
+box_margin = 0.15
 input_width = 640
 
 [net]
@@ -60,5 +66,5 @@ anim_timeout_s = 5
 
 [browser]
 # Chrome o Edge (los dos son Chromium y aceptan los mismos flags). Ajustar a la PC del anfitrión.
-chrome_path = "C:/Program Files/Google/Chrome/Application/chrome.exe"
-# chrome_path = "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
+# chrome_path = "C:/Program Files/Google/Chrome/Application/chrome.exe"
+chrome_path = "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"

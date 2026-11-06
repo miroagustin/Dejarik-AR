@@ -19,6 +19,16 @@ html, body {
 #debug { pointer-events: none; display: none; }
 #debug.on { display: block; }
 
+/* Anillo de carga del gesto de la mano. main.js lo ubica y pone --p (0..1). */
+#hold-ring {
+  --ring: var(--blue);
+  position: absolute; width: 44px; height: 44px; border-radius: 50%;
+  pointer-events: none; display: none;
+  background: conic-gradient(var(--ring) calc(var(--p, 0) * 1turn), transparent 0);
+  -webkit-mask: radial-gradient(circle, transparent 55%, #000 57%);
+  mask: radial-gradient(circle, transparent 55%, #000 57%);
+}
+
 #hud {
   position: absolute;
   inset: 0;
@@ -31,6 +41,7 @@ html, body {
 #role { top: 12px; left: 12px; font-size: 15px; }
 #roster { top: 64px; left: 12px; font-size: 14px; line-height: 1.5; }
 #combat { bottom: 18px; left: 50%; transform: translateX(-50%); font-size: 20px; }
+#hint { bottom: 64px; left: 50%; transform: translateX(-50%); font-size: 16px; }
 #notice { top: 60px; left: 50%; transform: translateX(-50%); font-size: 18px; color: #ffd36b; }
 #remote { top: 12px; right: 12px; font-size: 13px; max-width: 40%; word-break: break-all; pointer-events: auto; }
 #remote button { pointer-events: auto; margin-left: 6px; }

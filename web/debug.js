@@ -56,13 +56,23 @@ export function createDebug(canvas) {
         ctx.fillStyle = hand.pinch ? "#ffd36b" : "#ffffff";
         ctx.beginPath(); ctx.arc(hand.px[0], hand.px[1], 7, 0, Math.PI * 2); ctx.fill();
       }
+      if (hand?.box) {
+        const [u0, v0, u1, v1] = hand.box;
+        ctx.strokeStyle = "rgba(255,255,255,0.5)";
+        ctx.strokeRect(u0, v0, u1 - u0, v1 - v0);
+      }
 
       const p = header.pose;
       let y = 24;
       line(`render ${fps.toFixed(0)} fps · cuadro ${header.frame_id}`, y); y += 24;
       line(`pose ${p.ok ? "ok" : "PERDIDA"} · marcadores ${p.n_markers} · reproyección ${p.reproj_px.toFixed(2)} px${p.locked ? " · BLOQUEADA" : ""}`, y); y += 24;
       if (dbg?.ms) { line("ms " + Object.entries(dbg.ms).map(([k, v]) => `${k} ${(+v).toFixed(1)}`).join(" · "), y); y += 24; }
-      if (dbg?.pinch_ratio != null) line(`pinch ${dbg.pinch_ratio.toFixed(2)}`, y);
+      const hd = dbg?.hand;
+      if (hd) {
+        const f = v => (v == null ? "—" : v.toFixed(2));
+        line(`mano ${f(hd.metric)} (2D ${f(hd.metric2d)}) · medio ${hd.extended ? "estirado" : "doblado"} · ` +
+             `hold ${f(hd.hold)} · fijada ${hd.lock_cell ?? "—"} · ${hd.reason || "ok"}`, y);
+      }
     },
   };
 }

@@ -19,21 +19,23 @@ export function makeHologramMaterial(color) {
     side: THREE.DoubleSide,
   });
   mat.userData.flash = { value: 0 }; // 0..1, destello al recibir un golpe
+  mat.userData.pass = { value: 0 };  // 0..1, la mano la atraviesa: más parpadeo
   mat.onBeforeCompile = shader => {
-    Object.assign(shader.uniforms, holoUniforms, { uFlash: mat.userData.flash });
+    Object.assign(shader.uniforms, holoUniforms, { uFlash: mat.userData.flash, uPass: mat.userData.pass });
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nvarying vec3 vViewPos;")
       .replace("#include <project_vertex>", "#include <project_vertex>\nvViewPos = mvPosition.xyz;");
     shader.fragmentShader = shader.fragmentShader
       .replace("#include <common>", `#include <common>
         varying vec3 vViewPos;
-        uniform float uTime, uScan, uFlicker, uFlash;`)
+        uniform float uTime, uScan, uFlicker, uFlash, uPass;`)
       .replace("#include <opaque_fragment>", `
         vec3 n = normalize(cross(dFdx(vViewPos), dFdy(vViewPos)));
         float facing = abs(dot(n, normalize(-vViewPos)));
         float rim = pow(1.0 - facing, 1.6);
         float scan = 1.0 - uScan * 0.5 * (0.5 + 0.5 * sin(gl_FragCoord.y * 1.6 - uTime * 6.0));
-        float flicker = 1.0 - uFlicker * (0.5 + 0.5 * sin(uTime * 37.0) * sin(uTime * 13.0));
+        // uPass sube solo la amplitud: cambiar la frecuencia con uTime grande hace saltar la fase.
+        float flicker = 1.0 - (uFlicker + 0.35 * uPass) * (0.5 + 0.5 * sin(uTime * 37.0) * sin(uTime * 13.0));
         outgoingLight = diffuseColor.rgb * (0.55 + 1.1 * rim) * scan * flicker + uFlash * vec3(1.0);
         diffuseColor.a *= 0.7 + 0.3 * rim;
         #include <opaque_fragment>`);
