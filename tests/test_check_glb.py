@@ -78,10 +78,22 @@ def test_adapt_renames_scales_and_grounds(tmp_path):
     assert missing == []
     assert check(tmp_path / "out.glb") == []
     gltf, binary, _ = read_glb(tmp_path / "out.glb")
-    assert [a["name"] for a in gltf["animations"]] == CLIPS  # Dance se descarta
+    assert [a["name"] for a in gltf["animations"]] == CLIPS + ["dance"]  # el resto se conserva
     pts = posed_points(gltf, binary)
     assert abs(pts[:, 1].min()) < 1e-6
     assert 0.030 <= height <= 0.070
+
+
+def test_adapt_keeps_extra_clips(tmp_path):
+    from adapt_glb import adapt
+    from check_glb import read_glb
+
+    src = make_glb(tmp_path / "src.glb", clips=["A|Idle", "A|Walk", "A|Punch", "A|HitReact", "A|Death",
+                                                "A|Wave", "A|Yes"])
+    adapt(src, tmp_path / "out.glb")
+    gltf, _, _ = read_glb(tmp_path / "out.glb")
+    assert [a["name"] for a in gltf["animations"]] == CLIPS + ["wave", "yes"]
+    assert check(tmp_path / "out.glb") == []
 
 
 def test_adapt_reports_missing_clip(tmp_path):

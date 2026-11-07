@@ -22,7 +22,7 @@ Un archivo por tipo: `web/assets/creatures/{guardian,bestia,acechador,soldado}.g
 **Animación**
 
 - [ ] Tiene **un solo esqueleto**, o ninguno si se anima la pieza entera. Varias mallas (cuerpo y ojos) pueden compartir el mismo esqueleto.
-- [ ] Clips con estos nombres exactos: **`idle`, `walk`, `attack`, `hit`, `die`**.
+- [ ] Como mínimo, clips con estos nombres exactos: **`idle`, `walk`, `attack`, `hit`, `die`**. Otros clips son opcionales.
 - [ ] `idle` y `walk` hacen loop sin saltos, y `walk` es "in place": el movimiento lo hace el código.
 
 ## Fuente 1: Quaternius "Ultimate Monsters" (CC0)
@@ -34,7 +34,7 @@ Un archivo por tipo: `web/assets/creatures/{guardian,bestia,acechador,soldado}.g
   python tools/adapt_glb.py descargas/Cactoro.glb web/assets/creatures/guardian.glb
   ```
 
-  El script renombra los clips (`Idle`→`idle`, `Walk`→`walk`, `Punch`/`Bite_Front`/`Headbutt`→`attack`, `HitReact`/`HitRecieve`→`hit`, `Death`→`die`), descarta los demás, escala hasta que entre en el círculo de 44 mm (máximo 70 mm de alto), apoya el modelo en y = 0 y corre `check_glb`.
+  El script renombra los clips (`Idle`→`idle`, `Walk`→`walk`, `Punch`/`Bite_Front`/`Headbutt`→`attack`, `HitReact`/`HitRecieve`→`hit`, `Death`→`die`), conserva los demás en minúscula, escala hasta que entre en el círculo de 44 mm (máximo 70 mm de alto), apoya el modelo en y = 0 y corre `check_glb`.
 
 **Resultados medidos el día 2.** Pasaron 19 de 34 monstruos. Los que cumplen el contrato, ordenados por altura:
 
@@ -82,7 +82,8 @@ Contrato de salida (obligatorio):
 - Exportar .glb sin Draco, menos de 5 MB, +Y hacia arriba, 1 unidad = 1 m.
 - En el primer cuadro de idle, vista desde arriba, entra en un círculo de 44 mm
   centrado en el origen; alto entre 30 y 70 mm; punto más bajo en y = 0; mira a +Z.
-- Clips con estos nombres exactos: idle, walk, attack, hit, die.
+- Como mínimo, clips con estos nombres exactos: idle, walk, attack, hit, die.
+  Otros clips son opcionales.
   idle y walk hacen loop; walk sin desplazamiento.
 - Un solo esqueleto, o ninguno si es animación por objeto.
 - Antes de entregar, verificá con: python tools/check_glb.py <archivo>.glb
@@ -101,4 +102,4 @@ Si solo se consiguen 2 modelos, se repiten entre tipos. Los bandos se diferencia
 ## Revisión
 
 1. `python tools/check_glb.py web/assets/creatures/<kind>.glb` termina sin errores.
-2. Abrir `http://127.0.0.1:8000/?viewer=<kind>` y reproducir los 5 clips. Revisar que la malla no se deforme y que los loops no salten.
+2. Abrir `http://127.0.0.1:8000/?viewer=<kind>` y reproducir todos los clips. Revisar que la malla no se deforme y que los loops no salten.

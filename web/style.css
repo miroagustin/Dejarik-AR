@@ -41,7 +41,7 @@ html, body {
 #hud > div:empty { display: none; }
 #turn { top: 12px; left: 50%; transform: translateX(-50%); font-size: 26px; letter-spacing: 2px; }
 #role { top: 12px; left: 12px; font-size: 15px; }
-#roster { top: 64px; left: 12px; font-size: 14px; line-height: 1.5; }
+#roster { bottom: 18px; left: 12px; font-size: 14px; line-height: 1.5; }
 #combat { bottom: 18px; left: 50%; transform: translateX(-50%); font-size: 20px; }
 #hint { bottom: 64px; left: 50%; transform: translateX(-50%); font-size: 16px; }
 #notice { top: 60px; left: 50%; transform: translateX(-50%); font-size: 18px; color: #ffd36b; }

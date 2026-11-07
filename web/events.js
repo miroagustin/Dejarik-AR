@@ -6,6 +6,7 @@ import { tween } from "./creatures.js";
 export function createEventQueue({ army, spec, hud, audio, onDone }) {
   const queue = [];
   let running = false;
+  let fight = null; // { atk, def } de la última pelea, para saber quién sobrevive en death
 
   const handlers = {
     async move(e) {
@@ -26,9 +27,12 @@ export function createEventQueue({ army, spec, hud, audio, onDone }) {
       // el defensor mira al atacante
       const target = [...army.byId.values()].find(o => o.cell === e.to);
       target?.face(...cellCenter(spec, c.cell));
+      fight = { atk: c, def: target };
+      // En counter el motor le resta vida al atacante: el que pega es el defensor.
+      const striker = e.result.outcome === "counter" && target ? target : c;
       audio.play("attack");
-      await c.play("attack");
-      c.play("idle");
+      await striker.play("attack");
+      striker.play("idle");
     },
 
     async hit(e) {
@@ -48,14 +52,22 @@ export function createEventQueue({ army, spec, hud, audio, onDone }) {
       audio.play("death");
       if (!c) return;
       await c.play("die");
+      // El sobreviviente festeja junto con el fade, sin esperarlo.
+      const survivor = fight && [fight.atk, fight.def].find(o => o && o !== c);
+      if (survivor && [...army.byId.values()].includes(survivor)) survivor.celebrate();
       await tween(0.6, t => c.setOpacity(1 - t));
       army.parent.remove(c.root);
       army.byId.delete(e.piece);
+      fight = null;
     },
 
     async turn(e) { hud.turn(e.result.turn); audio.play("turn"); },
 
-    async win(e) { hud.win(e.result.winner); audio.play("win"); },
+    async win(e) {
+      army.byId.forEach(c => { if (c.owner === e.result.winner) c.celebrate(); });
+      hud.win(e.result.winner);
+      audio.play("win");
+    },
   };
 
   async function pump() {

@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { connect } from "./net.js";
 import { createScene, cellCenter } from "./scene.js";
-import { Army, Creature, KINDS, loadKinds } from "./creatures.js";
+import { Army, Creature, KINDS, loadKinds, stepTime } from "./creatures.js";
 import { holoUniforms } from "./hologram.js";
 import { createEventQueue } from "./events.js";
 import { createHud } from "./hud.js";
@@ -147,7 +147,7 @@ async function runGame() {
   view.renderer.setAnimationLoop(() => {
     const dt = clock.getDelta();
     holoUniforms.uTime.value = clock.elapsedTime;
-    army.update(dt);
+    army.update();
 
     // Pérdida de tracking: las criaturas se desvanecen en ~300 ms.
     const ok = lastHeader?.pose.ok ?? false;
@@ -190,7 +190,7 @@ async function runViewer(kind) {
   scene.add(ring);
 
   const ui = document.getElementById("viewer-ui");
-  ["idle", "walk", "attack", "hit", "die"].forEach(name => {
+  Object.keys(creature.actions).forEach(name => {
     const b = document.createElement("button");
     b.textContent = name;
     b.onclick = () => creature.play(name);
@@ -199,10 +199,12 @@ async function runViewer(kind) {
   document.getElementById("role").textContent = `visor: ${kind}`;
 
   const clock = new THREE.Clock();
+  let lastStep = stepTime(); // mismo reloj de pasos que Army.update, para que se vea igual que en el juego
   renderer.setAnimationLoop(() => {
     const dt = clock.getDelta();
     holoUniforms.uTime.value = clock.elapsedTime;
-    creature.mixer.update(dt);
+    const t = stepTime();
+    if (t !== lastStep) { creature.mixer.update(t - lastStep); lastStep = t; }
     if (!params.has("still")) creature.root.rotation.y += dt * 0.6;
     renderer.render(scene, camera);
   });

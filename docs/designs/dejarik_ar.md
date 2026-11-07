@@ -88,7 +88,7 @@ Tenemos tres problemas concretos:
     *   Una partida de principio a fin dura entre 6 y 8 minutos.
     *   En la demo se muestra un tramo de unos 3 minutos con al menos 2 combates. La partida completa se juega en los ensayos.
     *   Alguien que no conoce Star Wars entiende de quién es el turno, qué movimientos se pueden hacer y quién ganó, mirando el HUD.
-*   **G3 — Combate animado.** Las criaturas tienen look de holograma y los 5 clips (`idle`, `walk`, `attack`, `hit`, `die`), con sonido. Cada combate es una secuencia de acercarse, golpear, impacto y caída que dura entre 2 y 5 s.
+*   **G3 — Combate animado.** Las criaturas tienen look de holograma y al menos los 5 clips del contrato (`idle`, `walk`, `attack`, `hit`, `die`), con sonido. Cada combate es una secuencia de acercarse, golpear, impacto y caída que dura entre 2 y 5 s.
 *   **G4 — Demo con respaldos ensayados.**
     *   El juego corre en la PC del anfitrión y arranca con un solo comando en menos de 2 minutos.
     *   El modo local funciona sin internet. Solo el jugador remoto y Teams necesitan red.

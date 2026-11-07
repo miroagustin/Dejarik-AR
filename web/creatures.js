@@ -6,10 +6,15 @@ import { makeHologramMaterial, SIDE_COLORS } from "./hologram.js";
 import { boardToLocal, cellCenter } from "./scene.js";
 
 export const KINDS = ["guardian", "bestia", "acechador", "soldado"];
-const CLIPS = ["idle", "walk", "attack", "hit", "die"];
 const LOOPING = new Set(["idle", "walk"]);
 const FADE = 0.2;
 const WALK_SPEED = 0.06; // m/s
+// Gesto de victoria (wave o yes, se elige en el visor). null = sin gesto.
+const WIN_CLIP = "yes";
+// Stop-motion: la pose y el desplazamiento avanzan de a pasos de STEP s, todos con el mismo reloj.
+const STEP = 1 / 12;
+export const stepTime = () => Math.floor(performance.now() / 1000 / STEP) * STEP;
+const warned = new Set();
 
 // Si falta el .glb, una cápsula con los mismos clips para no frenar el desarrollo.
 function placeholder() {
@@ -46,6 +51,7 @@ export async function loadKinds() {
 class Creature {
   constructor(gltf, owner) {
     this.root = SkeletonUtils.clone(gltf.scene);
+    this.owner = owner;
     this.materials = [];
     this.baseOpacity = 1; // la escriben el tracking (main.js) y la muerte (events.js)
     this.pass = 0;        // 0..1, "se deja atravesar" por la mano
@@ -58,9 +64,8 @@ class Creature {
     });
     this.mixer = new THREE.AnimationMixer(this.root);
     this.actions = {};
-    for (const name of CLIPS) {
-      const clip = THREE.AnimationClip.findByName(gltf.animations, name);
-      if (!clip) continue;
+    for (const clip of gltf.animations) {
+      const name = clip.name;
       const a = this.mixer.clipAction(clip);
       if (!LOOPING.has(name)) { a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true; }
       this.actions[name] = a;
@@ -72,7 +77,10 @@ class Creature {
   // Devuelve una promesa que se resuelve cuando termina el clip (los loops, al terminar el fundido).
   play(name) {
     const next = this.actions[name];
-    if (!next) return Promise.resolve();
+    if (!next) {
+      if (!warned.has(name)) { warned.add(name); console.warn(`Sin clip "${name}", sigo sin animar`); }
+      return Promise.resolve();
+    }
     next.reset().play();
     if (this.current && this.current !== next) this.current.crossFadeTo(next, FADE, false);
     this.current = next;
@@ -91,6 +99,14 @@ class Creature {
     });
   }
 
+  // Gesto de victoria sin promesa: nadie lo espera. Si ya lo está haciendo, no lo reinicia
+  // (win llega justo después del death que lo arrancó). Vuelve a idle solo si nadie lo pisó.
+  celebrate() {
+    const a = this.actions[WIN_CLIP];
+    if (!a || this.current === a) return;
+    this.play(WIN_CLIP).then(() => { if (this.current === a) this.play("idle"); });
+  }
+
   face(x, y) {
     const d = boardToLocal(x, y).sub(this.root.position);
     if (d.lengthSq() > 1e-8) this.root.rotation.y = Math.atan2(d.x, d.z);
@@ -101,7 +117,7 @@ class Creature {
     const secs = Math.max(0.3, from.distanceTo(to) / WALK_SPEED);
     this.face(x, y);
     this.play("walk");
-    await tween(secs, t => this.root.position.lerpVectors(from, to, t));
+    await tween(secs, t => this.root.position.lerpVectors(from, to, t), stepTime);
     await this.play("idle");
   }
 
@@ -118,11 +134,12 @@ class Creature {
   setFlash(f) { this.materials.forEach(m => { m.userData.flash.value = f; }); }
 }
 
-export function tween(secs, step) {
+// clock en segundos; walkTo le pasa stepTime para que el desplazamiento salte junto con la pose.
+export function tween(secs, step, clock = () => performance.now() / 1000) {
   return new Promise(resolve => {
-    const t0 = performance.now();
+    const t0 = clock();
     (function frame() {
-      const t = Math.min(1, (performance.now() - t0) / (secs * 1000));
+      const t = Math.min(1, (clock() - t0) / secs);
       step(t);
       if (t < 1) requestAnimationFrame(frame); else resolve();
     })();
@@ -171,7 +188,14 @@ export class Army {
     }
   }
 
-  update(dt) { this.byId.forEach(c => c.mixer.update(dt)); }
+  // Todas las criaturas cambian de pose en el mismo cuadro, solo cuando el reloj de pasos avanza.
+  update() {
+    const t = stepTime();
+    if (t === this.lastStep) return;
+    const dt = t - (this.lastStep ?? t);
+    this.lastStep = t;
+    this.byId.forEach(c => c.mixer.update(dt));
+  }
 }
 
 export { Creature };

@@ -3,7 +3,8 @@ docs/assets_checklist.md sin abrir Blender:
 
     python tools/adapt_glb.py origen.glb web/assets/creatures/<kind>.glb
 
-- renombra los clips a idle/walk/attack/hit/die (ver CLIP_NAMES);
+- renombra los clips a idle/walk/attack/hit/die (ver CLIP_NAMES) y conserva el
+  resto en minúscula;
 - lo escala para que entre en el círculo de 44 mm y mida como mucho 70 mm;
 - lo apoya en y = 0.
 No toca la geometría ni las animaciones: agrega un nodo raíz con escala y
@@ -31,8 +32,9 @@ MARGIN = 0.98
 
 
 def rename_clips(gltf):
-    """Renombra los clips que encuentra y descarta el resto. -> clips que faltan."""
-    by_short = {a["name"].split("|")[-1]: a for a in gltf.get("animations", [])}
+    """Renombra los clips del contrato y conserva el resto en minúscula. -> clips que faltan."""
+    anims = gltf.get("animations", [])
+    by_short = {a["name"].split("|")[-1]: a for a in anims}
     kept, missing = [], []
     for ours, candidates in CLIP_NAMES.items():
         src = next((by_short[c] for c in candidates if c in by_short), None)
@@ -41,6 +43,13 @@ def rename_clips(gltf):
             continue
         src["name"] = ours
         kept.append(src)
+    names, used = {a["name"] for a in kept}, {id(a) for a in kept}
+    for a in anims:  # los que sobran, en el orden de origen; si el nombre ya está, se saltea
+        short = a["name"].split("|")[-1].lower()
+        if id(a) not in used and short not in names:
+            a["name"] = short
+            kept.append(a)
+            names.add(short)
     gltf["animations"] = kept
     return missing
 
