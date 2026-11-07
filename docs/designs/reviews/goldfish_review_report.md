@@ -14,7 +14,7 @@ Three fixes also touch the DetailedRange, so that both halves of the doc stay co
 ## ESCALATE: needs your input
 
 ### [Issue C1] [`egm-design`] - Severity: High
-*   **Affected Scope:** [Lines 44, 106–112](docs/designs/dejarik_ar.md#L44-L112) (The Problem, G5)
+*   **Affected Scope:** [Lines 44, 106–112](../dejarik_ar.md#L44-L112) (The Problem, G5)
 *   **Discrepancy Description:** The assignment lists 7 techniques. The design uses 4 of them; features, optical flow and segmentation are missing.
 *   **Rationale:** The assignment is graded against this list. The G5 slide would have three empty rows.
 *   ***AI Suggestion:*** ESCALATE
@@ -41,7 +41,7 @@ Three fixes also touch the DetailedRange, so that both halves of the doc stay co
 ## PROPOSE FIX: Blockers and Majors
 
 ### [Issue C2] [`egm-structural`, `egm-design`] - Severity: High
-*   **Affected Scope:** [Whole scope](docs/designs/dejarik_ar.md#L524-L691)
+*   **Affected Scope:** [Whole scope](../dejarik_ar.md#L524-L691)
 *   **Discrepancy Description:** The doc has no Risks & Mitigations section. The leader as the only person who can do rendering, the asset clip names and CPU contention are never named as risks.
 *   **Rationale:** The feature-spec standard requires a "Risks & Limits" section.
 *   ***AI Suggestion:*** PROPOSE FIX
@@ -60,7 +60,7 @@ Three fixes also touch the DetailedRange, so that both halves of the doc stay co
     > | El rival automático no llega a ganar 1 de 5. | Los pesos están en `config.toml` y se ajustan después del primer ensayo. | Ninguno; no bloquea la demo. |
 
 ### [Issue C3] [`egm-design`, Stages 5 and 6] - Severity: Medium
-*   **Affected Scope:** [Lines 163, 381–385](docs/designs/dejarik_ar.md#L163-L385) (CUJ 2, Juego)
+*   **Affected Scope:** [Lines 163, 381–385](../dejarik_ar.md#L163-L385) (CUJ 2, Juego)
 *   **Discrepancy Description:** The game actions are described three ways. CUJ 2 says a click on an illegal cell shows a warning, while the rules (line 758) say it deselects. Line 385 says input during animation is ignored, while the protocol has `denied:"animating"`.
 *   ***AI Suggestion:*** PROPOSE FIX
 *   ***Justification:*** `game.py` (line 963) already defines the simplest version, `tap`. Every other description should match it.
@@ -71,7 +71,7 @@ Three fixes also touch the DetailedRange, so that both halves of the doc stay co
     *   **[cross-range]** Line 953: change `("target_or_select", cell)` to `("tap", cell)`.
 
 ### [Issue C4] [`egm-design`] - Severity: Medium
-*   **Affected Scope:** [Lines 199, 255, 708](docs/designs/dejarik_ar.md#L199-L708)
+*   **Affected Scope:** [Lines 199, 255, 708](../dejarik_ar.md#L199-L708)
 *   **Discrepancy Description:** A classmate who clicks the link takes the remote seat away from the real player.
 *   ***AI Suggestion:*** PROPOSE FIX
 *   ***Justification:*** The finding is valid. The fix needs no new key: first-connection-wins plus a private chat closes the gap.
@@ -81,7 +81,7 @@ Three fixes also touch the DetailedRange, so that both halves of the doc stay co
     *   Line 708 → `…y el link solo se comparte por chat privado de Teams.`
 
 ### [Issue C5] [`egm-design`, Stage 5] - Severity: Medium
-*   **Affected Scope:** [Lines 253, 709](docs/designs/dejarik_ar.md#L253-L709)
+*   **Affected Scope:** [Lines 253, 709](../dejarik_ar.md#L253-L709)
 *   **Discrepancy Description:** The host role depends on the absence of the `Cf-Connecting-Ip` header.
 *   ***AI Suggestion:*** PROPOSE FIX
 *   ***Justification:*** A second token uses the same mechanism as `p=1`. With it, one rule decides every role, and the code gets no longer.
@@ -93,7 +93,7 @@ Three fixes also touch the DetailedRange, so that both halves of the doc stay co
     *   **[cross-range]** File 23 (line 1008): "decide el rol según `?p` y `k`" (drop the header).
 
 ### [Issue C6] [`egm-design`, `egm-style`] - Severity: Medium
-*   **Affected Scope:** [Lines 279, 283, 651, 699](docs/designs/dejarik_ar.md#L279-L699)
+*   **Affected Scope:** [Lines 279, 283, 651, 699](../dejarik_ar.md#L279-L699)
 *   **Discrepancy Description:** `cloudflared` buffers whatever the server sends, so `send` never blocks and delay piles up. The units are mixed, and the 5 Mbps budget is smaller than the remote video plus Teams.
 *   ***AI Suggestion:*** PROPOSE FIX
 *   ***Justification:*** The finding is valid. The "drop instead of delay" claim only holds against a slow local socket, and the tunnel's socket is not slow.
@@ -105,7 +105,7 @@ Three fixes also touch the DetailedRange, so that both halves of the doc stay co
     *   Line 699 → `subida del anfitrión ≥ 8 Mbps (3–5 Mbps del video remoto más 2–3 Mbps de Teams);`
 
 ### [Issue C7] [`egm-design`] - Severity: Medium
-*   **Affected Scope:** [Lines 202, 699–701](docs/designs/dejarik_ar.md#L202-L701)
+*   **Affected Scope:** [Lines 202, 699–701](../dejarik_ar.md#L202-L701)
 *   **Discrepancy Description:** The remote player downloads the GLBs and audio through the host's upload during the demo.
 *   ***AI Suggestion:*** PROPOSE FIX
 *   ***Proposed Edit:*** Add to the "Modo remoto" NFR:
@@ -113,14 +113,14 @@ Three fixes also touch the DetailedRange, so that both halves of the doc stay co
     > *   el jugador remoto entra antes de empezar la demo, así la descarga no compite con Teams en vivo.
 
 ### [Issue C8] [`egm-design`, Stage 6] - Severity: Medium
-*   **Affected Scope:** [Line 183](docs/designs/dejarik_ar.md#L183) (CUJ 4)
+*   **Affected Scope:** [Line 183](../dejarik_ar.md#L183) (CUJ 4)
 *   **Discrepancy Description:** After a restart there is a new token and a new tunnel URL, so the remote player cannot reconnect on their own.
 *   ***AI Suggestion:*** PROPOSE FIX
 *   ***Justification:*** This uses the cheaper of the two options. Keeping `cloudflared` alive across restarts would mean managing a process outside Python.
 *   ***Proposed Edit:*** Line 183 → `*   si Python se reinició, la partida retoma el último estado guardado y el navegador del anfitrión se reconecta solo. En modo \`remote\` hay un link nuevo: el anfitrión lo copia del HUD y se lo pasa al jugador 1, que vuelve en menos de 30 s;`
 
 ### [Issue C9] [`egm-design`, Stage 6] - Severity: Medium
-*   **Affected Scope:** [Lines 34, 251, 274–275, 493](docs/designs/dejarik_ar.md#L34-L493)
+*   **Affected Scope:** [Lines 34, 251, 274–275, 493](../dejarik_ar.md#L34-L493)
 *   **Discrepancy Description:** `P` into `remote` without a tunnel is undefined. So is what happens to `p=1` when the mode leaves `remote`, and whether queued bot moves are cancelled.
 *   ***AI Suggestion:*** PROPOSE FIX
 *   ***Proposed Edit:*** After line 251, add:
@@ -132,13 +132,13 @@ Three fixes also touch the DetailedRange, so that both halves of the doc stay co
     Also change lines 34 and 493 to the same cycle.
 
 ### [Issue C10] [`egm-design`] - Severity: Medium
-*   **Affected Scope:** [Line 477](docs/designs/dejarik_ar.md#L477)
+*   **Affected Scope:** [Line 477](../dejarik_ar.md#L477)
 *   **Discrepancy Description:** Windows pauses a covered Chrome window, so `anim_done` stops arriving and the game stalls. The autoplay policy mutes the startup sound (N6).
 *   ***AI Suggestion:*** PROPOSE FIX
 *   ***Proposed Edit:*** Line 477: append `Chrome se lanza además con \`--disable-features=CalculateNativeWinOcclusion --disable-renderer-backgrounding --disable-backgrounding-occluded-windows --autoplay-policy=no-user-gesture-required\`, para que no se pause cuando Teams tapa la ventana y para que suene el audio de arranque. En el ensayo se prueba tapar la ventana con Teams.`
 
 ### [Issue C11] [`egm-design`, `egm-style`] - Severity: Medium
-*   **Affected Scope:** [Lines 519–520](docs/designs/dejarik_ar.md#L519-L520)
+*   **Affected Scope:** [Lines 519–520](../dejarik_ar.md#L519-L520)
 *   **Discrepancy Description:** The doc states that the threads are fast enough as a fact, with no measurement behind it.
 *   ***AI Suggestion:*** PROPOSE FIX
 *   ***Proposed Edit:*** Replace lines 519–520 with:
@@ -146,7 +146,7 @@ Three fixes also touch the DetailedRange, so that both halves of the doc stay co
     > *   Se verifica el día 12 en la PC de la demo: fps de pose con y sin el hilo de manos. Si con la mano la pose baja de 30 fps, `hands` pasa a un `multiprocessing.Process`.
 
 ### [Issue C12] [`egm-design`, Stage 5] - Severity: Medium
-*   **Affected Scope:** [Lines 485–486, 507](docs/designs/dejarik_ar.md#L485-L507)
+*   **Affected Scope:** [Lines 485–486, 507](../dejarik_ar.md#L485-L507)
 *   **Discrepancy Description:** `--replay` re-sends the recorded `state` and `events`, so it would fight a live `game`.
 *   ***AI Suggestion:*** PROPOSE FIX
 *   ***Justification:*** Recording only the cuadros keeps the format small. It also lets the fixture do what line 507 says it is for.
@@ -156,7 +156,7 @@ Three fixes also touch the DetailedRange, so that both halves of the doc stay co
     *   **[cross-range]** File 22: `replay` only writes to the `frame_bus`.
 
 ### [Issue C13] [`egm-design`, Stage 6] - Severity: Medium
-*   **Affected Scope:** [Line 26](docs/designs/dejarik_ar.md#L26) (Cómo se juega)
+*   **Affected Scope:** [Line 26](../dejarik_ar.md#L26) (Cómo se juega)
 *   **Discrepancy Description:** The FeatureRange uses `bestia`, HP, ATK, DEF and the win condition without ever defining them.
 *   ***AI Suggestion:*** PROPOSE FIX
 *   ***Justification:*** The finding is valid. This is a gap a human reader would hit, not only a zero-context reviewer. The proposed turn cap is a game-design decision, so it is listed separately; you can reject it.
@@ -165,7 +165,7 @@ Three fixes also touch the DetailedRange, so that both halves of the doc stay co
     *   *(Optional, your decision)* Add to the rules (line 760): `Si en 80 turnos nadie gana, gana quien tenga más HP total.`
 
 ### [Issue C14] [`egm-design`, Stage 5] - Severity: Medium
-*   **Affected Scope:** [After line 687](docs/designs/dejarik_ar.md#L687) (Alternatives)
+*   **Affected Scope:** [After line 687](../dejarik_ar.md#L687) (Alternatives)
 *   **Discrepancy Description:** Two cheaper remote designs are not considered: a 2D board that relies on the Teams share for the AR view, and WebRTC.
 *   ***AI Suggestion:*** PROPOSE FIX
 *   ***Proposed Edit:*** Add:
@@ -182,7 +182,7 @@ Three fixes also touch the DetailedRange, so that both halves of the doc stay co
     Change line 722 to point at Alternativa R.
 
 ### [Issue C15] [`egm-structural`, `egm-style`, `egm-design`] - Severity: Medium
-*   **Affected Scope:** [Lines 124, 536–666](docs/designs/dejarik_ar.md#L124-L666)
+*   **Affected Scope:** [Lines 124, 536–666](../dejarik_ar.md#L124-L666)
 *   **Discrepancy Description:** Every alternative is rejected with "Rechazada por el autor", and the J, K, H, I and line 124 rationales are circular once the label is removed.
 *   ***AI Suggestion:*** PROPOSE FIX
 *   ***Proposed Edit:***
@@ -194,19 +194,19 @@ Three fixes also touch the DetailedRange, so that both halves of the doc stay co
     *   Line 630 (K) → `Con pocos marcadores elige la pose espejada y no se recupera; IPPE devuelve las dos soluciones y permite elegir.`
 
 ### [Issue C16] [`egm-structural`, `egm-style`, `egm-design`] - Severity: Medium
-*   **Affected Scope:** [Lines 94–119](docs/designs/dejarik_ar.md#L94-L119)
+*   **Affected Scope:** [Lines 94–119](../dejarik_ar.md#L94-L119)
 *   **Discrepancy Description:** The goals appear in the order G1–G4, G7, G5, G6.
 *   ***AI Suggestion:*** PROPOSE FIX
 *   ***Justification:*** Moving the G7 block (lines 94–105) to after G6 keeps every ID, so nothing elsewhere in the doc needs to change.
 *   ***Proposed Edit:*** Move lines 94–105 to after line 119.
 
 ### [Issue C17] [`egm-structural`, `egm-style`] - Severity: Medium
-*   **Affected Scope:** [Line 197](docs/designs/dejarik_ar.md#L197)
+*   **Affected Scope:** [Line 197](../dejarik_ar.md#L197)
 *   ***AI Suggestion:*** PROPOSE FIX
 *   ***Proposed Edit:*** Line 197 → `*   el anfitrión arrancó con \`--mode remote\`;`
 
 ### [Issue C18] [`egm-structural`] - Severity: Medium
-*   **Affected Scope:** [Lines 420–427](docs/designs/dejarik_ar.md#L420-L427)
+*   **Affected Scope:** [Lines 420–427](../dejarik_ar.md#L420-L427)
 *   **Discrepancy Description:** No message carries the tunnel state or whether the remote player is connected. `denied` sits under the wrong subheading, and code 4401 is not listed in the protocol.
 *   ***AI Suggestion:*** PROPOSE FIX
 *   ***Proposed Edit:*** Replace lines 420–427 with:
@@ -224,7 +224,7 @@ Three fixes also touch the DetailedRange, so that both halves of the doc stay co
     > *   Códigos de cierre del WebSocket: 4401 token inválido, 4409 ya hay un jugador 1.
 
 ### [Issue C19] [`egm-style`, `egm-design`, Stages 5 and 6] - Severity: Medium
-*   **Affected Scope:** [Line 93](docs/designs/dejarik_ar.md#L93)
+*   **Affected Scope:** [Line 93](../dejarik_ar.md#L93)
 *   ***AI Suggestion:*** PROPOSE FIX
 *   ***Proposed Edit:*** Line 93 → `*   Cada falla prevista tiene un respaldo ensayado (detalle en Risks & Mitigations):` followed by sub-bullets:
     > *   mano no responde → mouse (`--input mouse`);
@@ -234,7 +234,7 @@ Three fixes also touch the DetailedRange, so that both halves of the doc stay co
     > *   Python no arranca → MP4.
 
 ### [Issue C20] [`egm-style`] - Severity: Medium
-*   **Affected Scope:** [Lines 89–90](docs/designs/dejarik_ar.md#L89-L90)
+*   **Affected Scope:** [Lines 89–90](../dejarik_ar.md#L89-L90)
 *   ***AI Suggestion:*** PROPOSE FIX
 *   ***Proposed Edit:***
     *   Line 89 → `*   **G3 — Combate animado.** Las criaturas tienen look de holograma y los 5 clips (\`idle\`, \`walk\`, \`attack\`, \`hit\`, \`die\`), con sonido. Cada combate es una secuencia de acercarse, golpear, impacto y caída que dura entre 2 y 5 s.`

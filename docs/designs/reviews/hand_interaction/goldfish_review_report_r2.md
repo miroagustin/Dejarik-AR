@@ -26,7 +26,7 @@ Evidence checked for this pass:
 ## Prioritized Findings & AI Suggestions
 
 ### [R2-1] [`implementation-readiness` B1, `codebase-details` B1] - Severity: High
-*   **Affected Scope:** [Lines 238-244](docs/designs/hand_interaction.md#L238-L244) (table), [L605-612](docs/designs/hand_interaction.md#L605-L612), [L707-709](docs/designs/hand_interaction.md#L707-L709)
+*   **Affected Scope:** [Lines 238-244](../../hand_interaction.md#L238-L244) (table), [L605-612](../../hand_interaction.md#L605-L612), [L707-709](../../hand_interaction.md#L707-L709)
 *   **Discrepancy Description:** In `dwell`, the gesture re-locks on the previous cell.
     *   Trace: it fires on 5, and the finger moves to 6. On the frame after "salió", the machine is free and armed, so it locks again at once with `lock_cell = shown`.
     *   `shown` is still 5. The debounce needs 3 free frames to move it, the candidate resets on lock, and while locked `shown` is pinned to `lock_cell`.
@@ -46,7 +46,7 @@ Evidence checked for this pass:
     *   Location: the bullet "La casilla fijada es la resaltada" (L246-247). Append: "Solo se fija cuando el dedo está en la casilla resaltada (`cell == shown`), así no se fija la casilla anterior mientras el debounce alcanza al dedo. En `dwell`, después de salir del radio se espera `cell_frames` cuadros y se fija la casilla nueva."
 
 ### [R2-2] [`codebase-details` B2, `implementation-readiness` M5] - Severity: High
-*   **Affected Scope:** [L582-583](docs/designs/hand_interaction.md#L582-L583) (`middle_extended`), [L621-625](docs/designs/hand_interaction.md#L621-L625) (`hand_msg`), [L724-725](docs/designs/hand_interaction.md#L724-L725) (`test_hand_msg`)
+*   **Affected Scope:** [L582-583](../../hand_interaction.md#L582-L583) (`middle_extended`), [L621-625](../../hand_interaction.md#L621-L625) (`hand_msg`), [L724-725](../../hand_interaction.md#L724-L725) (`test_hand_msg`)
 *   **Discrepancy Description:** `hand_msg` publishes values that `json.dumps` can't encode.
     *   `"px": lm2d[8]` is a numpy array, and `middle_extended` returns `np.bool_`.
     *   `encode_frame` calls `json.dumps` (`protocol.py:14`). It raises `TypeError` on the first frame with a hand, which kills the vision thread and freezes the app.
@@ -59,7 +59,7 @@ Evidence checked for this pass:
     *   `test_hand_msg`: also assert that `json.dumps(hand_msg(...))` doesn't raise, with numpy arrays as input.
 
 ### [R2-3] [`implementation-readiness` M3, `codebase-details` M1] - Severity: Medium
-*   **Affected Scope:** [Lines 685-714](docs/designs/hand_interaction.md#L685-L714) (tests)
+*   **Affected Scope:** [Lines 685-714](../../hand_interaction.md#L685-L714) (tests)
 *   **Discrepancy Description:** With `shown=None` at start and `cell_frames=3`, a test that starts closed doesn't behave as described. The table as written cancels with "afuera" and disarms. With R2-1, it waits 3 frames. Either way the sequences as written fail. The tests also don't say from which instant "1000 ms" is measured.
 *   **Rationale:** An implementer would have to invent the sequences.
 *   ***AI Suggestion:*** PROPOSE FIX
@@ -67,7 +67,7 @@ Evidence checked for this pass:
 *   ***Proposed Edit:*** In item 4, change the constructor sentence to: "Todos los tests de `Confirm` lo construyen con `Confirm(0.35, 0.45, 1000, 0.02, 1, False)` (`cell_frames=1`, así `shown` alcanza al dedo en el mismo cuadro), salvo `test_confirm_debounce`, que usa `cell_frames=3`. Los tiempos se miden desde el primer cuadro cerrado, que es el que fija. `xy = cell_center(c, spec)` con el `spec` escalado de `board_spec.json`."
 
 ### [R2-4] [`implementation-readiness` M2, `codebase-details` M2] - Severity: Medium
-*   **Affected Scope:** [L244](docs/designs/hand_interaction.md#L244), [L257-258](docs/designs/hand_interaction.md#L257-L258), [L710-711](docs/designs/hand_interaction.md#L710-L711)
+*   **Affected Scope:** [L244](../../hand_interaction.md#L244), [L257-258](../../hand_interaction.md#L257-L258), [L710-711](../../hand_interaction.md#L710-L711)
 *   **Discrepancy Description:** `hold_ms = 0` conflicts with "one row per frame".
     *   Locking and firing are separate rows, so with `hold_ms = 0` the fire happens on the frame after the lock, but the test expects it on the lock frame.
     *   The division in the `hold` formula is not guarded.
@@ -79,7 +79,7 @@ Evidence checked for this pass:
     *   L257-258: "`hold` vale 0 si está libre, 1 si ya disparó o si `hold_ms == 0` (sin dividir), y `min(1, (t - t0) / (hold_ms / 1000))` si no."
 
 ### [R2-5] [`implementation-readiness` M4, `style` N15] - Severity: Medium
-*   **Affected Scope:** [Lines 685-725](docs/designs/hand_interaction.md#L685-L725), [L966-968](docs/designs/hand_interaction.md#L966-L968)
+*   **Affected Scope:** [Lines 685-725](../../hand_interaction.md#L685-L725), [L966-968](../../hand_interaction.md#L966-L968)
 *   **Discrepancy Description:** The coverage rule is still not met. Untested:
     *   row 6 with `xy None` (pose lost mid-gesture)
     *   row 1's "and armed" effect
@@ -97,7 +97,7 @@ Evidence checked for this pass:
     *   `test_confirm_debounce`: append "Cerrado sobre una casilla que todavía no es `shown` no fija hasta que `shown` la alcanza."
 
 ### [R2-6] [`style` M1] - Severity: Medium
-*   **Affected Scope:** [Lines 605-612](docs/designs/hand_interaction.md#L605-L612)
+*   **Affected Scope:** [Lines 605-612](../../hand_interaction.md#L605-L612)
 *   **Discrepancy Description:** The `shown` debounce is written as nested conditional prose ("si no, si … si no"). It also duplicates section 4.
 *   **Rationale:** It is easy to mis-nest when implementing.
 *   ***AI Suggestion:*** PROPOSE FIX
@@ -109,7 +109,7 @@ Evidence checked for this pass:
     *   Then add: "Esta es la regla; la sección 4 describe el efecto."
 
 ### [R2-7] [`style` M2] - Severity: Medium
-*   **Affected Scope:** [Lines 975-979](docs/designs/hand_interaction.md#L975-L979) (Verification step 3)
+*   **Affected Scope:** [Lines 975-979](../../hand_interaction.md#L975-L979) (Verification step 3)
 *   **Discrepancy Description:** The "histogramas de E1" have no data source, no tool and no pass rule.
 *   **Rationale:** As written, the step can't be checked.
 *   ***AI Suggestion:*** PROPOSE FIX

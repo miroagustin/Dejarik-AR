@@ -27,7 +27,7 @@ Five fixes also change lines 1–781 so both halves stay consistent. They are ma
 ## 🔴 Blockers
 
 ### [R1] Host browser rejected; tokens have no owner. PROPOSE FIX
-*   **Scope:** [954–962](docs/designs/dejarik_ar.md#L954-L962), [834–845](docs/designs/dejarik_ar.md#L834-L845)
+*   **Scope:** [954–962](../dejarik_ar.md#L954-L962), [834–845](../dejarik_ar.md#L834-L845)
 *   **Edit:** In item 14, replace the `tunnel.start()` and Chrome bullets with:
     > *   genera `host_token` y `remote_token` con `secrets.token_urlsafe(16)`. `host_token` se guarda en `save/host_token` y `--resume` lo reutiliza, para que la ventana de Chrome ya abierta se reconecte sola;
     > *   en modo `remote` llama a `tunnel.start()` e imprime `<url>/?p=1&k=<remote_token>`. `host_token` nunca se imprime;

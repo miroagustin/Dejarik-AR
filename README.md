@@ -7,6 +7,15 @@ TP integrador de Visión Artificial: holoajedrez en realidad aumentada sobre un 
 
 Diseño completo: [docs/designs/dejarik_ar.md](docs/designs/dejarik_ar.md).
 
+## Documentación
+
+- [Briefs](docs/briefs/): consigna original, concepto general, mano, personajes y vista frontal.
+- [Diseños](docs/designs/): especificaciones del sistema y sus funciones.
+- [Borradores](docs/designs/drafts/): versiones de trabajo conservadas por separado.
+- [Revisiones](docs/designs/reviews/): revisión general y carpetas por función (`hand_interaction/` y `criaturas_canon/`).
+
+La calibración `calib.npz` y las grabaciones `.dj` son locales y no se versionan; las sesiones de prueba de `fixtures/` sí.
+
 ## Estado
 
 Está implementado todo el diseño: visión (`vision`, `one_euro`), mano (`hands`), reglas (`game`), rival automático (`ai`), servidor y modos (`transport`), túnel (`tunnel`), grabación y replay (`recording`) y el navegador (`web/`). Falta lo que se hace en la casa del anfitrión: `calib.npz`, el ajuste de la mano y los ensayos por Teams.

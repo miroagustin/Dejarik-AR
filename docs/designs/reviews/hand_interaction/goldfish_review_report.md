@@ -3,7 +3,7 @@ Status: resolved (auto accept, 2026-11-06). All 24 PROPOSE FIX items were applie
 # Goldfish Annotated Review Report
 
 **Target:** `docs/designs/hand_interaction.md` (full file, lines 1-927)
-**Findings source:** [consolidated_review_report.md](consolidated_review_report.md), action items A1-A25 plus the five items it recommends skipping. Finding IDs follow that report's traceability matrix.
+**Findings source:** [consolidated_review_report.md](../criaturas_canon/consolidated_review_report.md), action items A1-A25 plus the five items it recommends skipping. Finding IDs follow that report's traceability matrix.
 
 Evidence checked for this pass:
 - `dejarik/hands.py:17-38`: `Pinch`. `update(None)` resets it, and a closed metric on the next call re-activates it with no need to open.
@@ -23,7 +23,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
 ## Prioritized Findings & AI Suggestions
 
 ### [Issue 1] [`design`, `comprehension`, `codebase-details`, `implementation-readiness`, `zoom-out`] - Severity: High
-*   **Affected Scope:** [Lines 206-232](docs/designs/hand_interaction.md#L206-L232) (§3 `Confirm`) and [Lines 555-587](docs/designs/hand_interaction.md#L555-L587) (item 1, `class Confirm`)
+*   **Affected Scope:** [Lines 206-232](../../hand_interaction.md#L206-L232) (§3 `Confirm`) and [Lines 555-587](../../hand_interaction.md#L555-L587) (item 1, `class Confirm`)
 *   **Discrepancy Description:** The `Confirm` state machine has four problems.
     *   After a "salió" cancel, step 4 re-activates `Pinch` in the same frame, leaving `lock_cell = None`. On the next frame `cell_center(None)` raises `TypeError` and kills the hands thread.
     *   Nothing makes the player open the fingers before trying again.
@@ -126,7 +126,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
         ```
 
 ### [Issue 2] [`design`, `structural`, `zoom-out`] - Severity: High
-*   **Affected Scope:** whole document. Insert between [Lines 340-342](docs/designs/hand_interaction.md#L340-L342) (end of §8, before "## Alternatives Considered").
+*   **Affected Scope:** whole document. Insert between [Lines 340-342](../../hand_interaction.md#L340-L342) (end of §8, before "## Alternatives Considered").
 *   **Discrepancy Description:** There is no Risks & Mitigations section, which the standard requires. Risks are scattered across OQ1, Alternatives D, F and H, and the Goals.
 *   **Rationale:** The standard requires that the spec state its own failure modes and how each is mitigated.
 *   ***AI Suggestion:*** PROPOSE FIX (and contest the "security" item)
@@ -148,7 +148,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
 
 ### [Issue 3] [`zoom-out` Z5-1, Z8-2; `comprehension` S6#8] - Severity: Medium — **needs your decision**
 *   **Affected Scope:**
-    *   Spec: [L89-95](docs/designs/hand_interaction.md#L89-L95) (G5, G6), [L114-115](docs/designs/hand_interaction.md#L114-L115), [L130-131](docs/designs/hand_interaction.md#L130-L131) (OQ3), [L189-193](docs/designs/hand_interaction.md#L189-L193), [L270-296](docs/designs/hand_interaction.md#L270-L296), [L463-470](docs/designs/hand_interaction.md#L463-L470) (Alt M), [L500-502](docs/designs/hand_interaction.md#L500-L502) (Change 4).
+    *   Spec: [L89-95](../../hand_interaction.md#L89-L95) (G5, G6), [L114-115](../../hand_interaction.md#L114-L115), [L130-131](../../hand_interaction.md#L130-L131) (OQ3), [L189-193](../../hand_interaction.md#L189-L193), [L270-296](../../hand_interaction.md#L270-L296), [L463-470](../../hand_interaction.md#L463-L470) (Alt M), [L500-502](../../hand_interaction.md#L500-L502) (Change 4).
     *   Plan: items 1, 3, 4, 14 and 18.
 *   **Discrepancy Description:** The three gesture modes bring a `gesture` enum, two TOML subtables, a `gesture_params` builder and an old-key warning.
     *   The `pinch` mode keeps the gesture the Problem section shows is wrong.
@@ -190,7 +190,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
     *   Verification L909: "`[hands] on/off`".
 
 ### [Issue 4] [`design` D-M1, D-M2; `zoom-out` Z8-2] - Severity: Medium
-*   **Affected Scope:** [L265-267](docs/designs/hand_interaction.md#L265-L267) (`dbg`), [L369-375](docs/designs/hand_interaction.md#L369-L375) (Alt C), [L908-910](docs/designs/hand_interaction.md#L908-L910) (Verification step 3), and item 1 publish dict (L602-606).
+*   **Affected Scope:** [L265-267](../../hand_interaction.md#L265-L267) (`dbg`), [L369-375](../../hand_interaction.md#L369-L375) (Alt C), [L908-910](../../hand_interaction.md#L908-L910) (Verification step 3), and item 1 publish dict (L602-606).
 *   **Discrepancy Description:** Two gaps.
     *   The default `on = 0.35` counts a relaxed open hand as "closed", and the G2 test doesn't include a hovering open hand.
     *   The claim that 3D world landmarks beat the 2D ratio is unproven, because z comes from the same monocular crop.
@@ -202,7 +202,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
     *   Verification step 3: after "sin confirmaciones falsas", add "incluida una mano abierta quieta 3 s sobre un destino válido". After "línea de debug", add "Los histogramas de E1 comparan `metric` y `metric2d` para apuntar, dos dedos juntos y mano abierta."
 
 ### [Issue 5] [`codebase-details` CD-M1; `implementation-readiness` IR-M1, IR-M4; `style` ST-M3, ST-M4; `comprehension` S6#9] - Severity: Medium
-*   **Affected Scope:** [Lines 588-606](docs/designs/hand_interaction.md#L588-L606) (`hands_loop`) and [L545-554](docs/designs/hand_interaction.md#L545-L554) (`gesture_params`)
+*   **Affected Scope:** [Lines 588-606](../../hand_interaction.md#L588-L606) (`hands_loop`) and [L545-554](../../hand_interaction.md#L545-L554) (`gesture_params`)
 *   **Discrepancy Description:** The per-frame nesting is ambiguous, so `update` appears to run twice on no-hand frames. Several things are unspecified or wrong:
     *   `ext_on`/`ext_off` for non-touch gestures, the `extended` formula, and the no-hand `dbg` contents are never given.
     *   `p.ext_off` uses attribute access on a dict.
@@ -248,7 +248,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
     *   Location: `gesture_params` (L545-554). Add: "Para `dwell`, `on`/`off` valen `0.5`/`0.5` y `ext_on`/`ext_off` valen `0.0`. `cancel_radius_m = cancel_radius_mm / 1000`. `rearm_on_move = gesture == "dwell"`. La config usa `extended_on/off`; el dict los devuelve como `ext_on/ext_off`." Add `import math` at the top of `hands.py`.
 
 ### [Issue 6] [`implementation-readiness` IR-M2; `codebase-details` CD-M2; `design` D-N4] - Severity: Medium
-*   **Affected Scope:** [Lines 622-625](docs/designs/hand_interaction.md#L622-L625) (`scale_hand`) and [L680-683](docs/designs/hand_interaction.md#L680-L683) (test)
+*   **Affected Scope:** [Lines 622-625](../../hand_interaction.md#L622-L625) (`scale_hand`) and [L680-683](../../hand_interaction.md#L680-L683) (test)
 *   **Discrepancy Description:** Old `.dj` files have no `box` key, and `recording.replay` passes recorded headers through `encode_remote`. "Multiplicados cuando no son `None`" doesn't say what happens when the key is missing, so a remote `--replay` could raise `KeyError`.
 *   **Rationale:** This breaks the compatibility claim at L515.
 *   ***AI Suggestion:*** PROPOSE FIX
@@ -258,7 +258,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
     *   L680-683: append "Un segundo caso con el `hand` viejo `{cell, pinch, px}` (sin `box`) no levanta error y no agrega `box`. `net_cfg = {"remote_width": 640, "remote_quality": 60}`."
 
 ### [Issue 7] [`implementation-readiness` IR-M3; `codebase-details` CD-N4; `style` ST-N7] - Severity: Medium
-*   **Affected Scope:** [Lines 642-675](docs/designs/hand_interaction.md#L642-L675) (item 4 tests) and [L899-901](docs/designs/hand_interaction.md#L899-L901) (coverage rule)
+*   **Affected Scope:** [Lines 642-675](../../hand_interaction.md#L642-L675) (item 4 tests) and [L899-901](../../hand_interaction.md#L899-L901) (coverage rule)
 *   **Discrepancy Description:** Tests are missing for:
     *   "suelta"
     *   `hold_ms = 0`
@@ -285,7 +285,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
     *   L899-901: "Cada fila de la tabla de `Confirm` (sección 3) y el debounce tienen al menos un test que falla si se rompen."
 
 ### [Issue 8] [`comprehension` S6#4; `structural` S-4, S-10; `style` ST-M4] - Severity: Medium
-*   **Affected Scope:** [Lines 119-140](docs/designs/hand_interaction.md#L119-L140) (Open Questions)
+*   **Affected Scope:** [Lines 119-140](../../hand_interaction.md#L119-L140) (Open Questions)
 *   **Discrepancy Description:** OQ3 says "Falta confirmar", but Alternative M and Change 4 treat it as decided. OQ4 and OQ5 are marked "propuesto" but used as settled. OQ1 is "resuelta" but still listed as open.
 *   **Rationale:** A reader can't tell what is still open.
 *   ***AI Suggestion:*** PROPOSE FIX
@@ -298,7 +298,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
     *   OQ5: change "(propuesto: …)" to "(resuelta: …)".
 
 ### [Issue 9] [`comprehension` S6#5, S6#14; `design` D-N1; `style` ST-M4, ST-N11; `zoom-out` Z8-5] - Severity: Medium
-*   **Affected Scope:** [Lines 29-31](docs/designs/hand_interaction.md#L29-L31) (Overview dates), [L59-61](docs/designs/hand_interaction.md#L59-L61), [L909-910](docs/designs/hand_interaction.md#L909-L910)
+*   **Affected Scope:** [Lines 29-31](../../hand_interaction.md#L29-L31) (Overview dates), [L59-61](../../hand_interaction.md#L59-L61), [L909-910](../../hand_interaction.md#L909-L910)
 *   **Discrepancy Description:** Several terms are undefined:
     *   "el control"
     *   "16-18/11"
@@ -319,7 +319,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
         *   **E3:** "se deja atravesar".
         *   **E4:** oclusión real, opcional.
         *   **El control** es el control 2 del plan general (días 14-16,
-            [concepts_brief.md](../../concepts_brief.md)), entre el 16 y el
+            [concepts_brief.md](../../../briefs/concepts_brief.md)), entre el 16 y el
             18/11. Ahí los 5 integrantes del equipo miden E1-E3 contra E0.
         *   E4 solo entra si E1-E3 cierran antes del **18/11**. El
             congelamiento es el **20/11/2026** y la demo el **26/11/2026**.
@@ -330,7 +330,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
     *   L909-910: "mirando la línea de debug con la mano de cada uno de los 5 integrantes".
 
 ### [Issue 10] [`design` D-M7; `structural` S-3, S-11; `style` ST-N7] - Severity: Medium
-*   **Affected Scope:** [Lines 342-481](docs/designs/hand_interaction.md#L342-L481) (Alternatives)
+*   **Affected Scope:** [Lines 342-481](../../hand_interaction.md#L342-L481) (Alternatives)
 *   **Discrepancy Description:** Rejections are attributed to "Rechazado por el autor" or "(aprobó el Technical Plan)" without a linked record.
     *   C rests on "pidió medirlo en 3D".
     *   G is a deferral condition, not a rejection.
@@ -339,14 +339,14 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
 *   ***AI Suggestion:*** PROPOSE FIX
 *   ***Justification:*** The author decisions are real and recorded in `hand_interaction_brief.md`, but the reviewers couldn't see it because it wasn't linked. Linking it once (Issue 16) and leading each reason with the trade-off fixes both problems.
 *   ***Proposed Edit:***
-    *   L344-345: append "Todas las decisiones son del autor y están registradas en [hand_interaction_brief.md](../../hand_interaction_brief.md). Abajo va el motivo técnico de cada una."
+    *   L344-345: append "Todas las decisiones son del autor y están registradas en [hand_interaction_brief.md](../../../briefs/hand_interaction_brief.md). Abajo va el motivo técnico de cada una."
     *   Remove the prefixes "Rechazado por el autor: " and "Rechazado por el autor (aprobó el Technical Plan): " (13 places). Each reason then starts with its trade-off.
     *   C reason: "en 2D, desde el lado cercano, las puntas alineadas con la cámara parecen juntas. El ratio 3D no depende de esa dirección si el modelo estima bien la profundidad, y E1 lo verifica comparando con el 2D (`metric2d`)."
     *   G reason: "una sola profundidad está mal para los nudillos y el brazo, y además requiere enmendar `concepts_brief.md:328`. F, que no tiene esos problemas, ya está fuera del alcance obligatorio."
     *   E: change the label "Reason for Rejection" to "**Estado**: plan B, no se descarta."
 
 ### [Issue 11] [`codebase-details` CD-M3] - Severity: Medium
-*   **Affected Scope:** [Lines 697-712](docs/designs/hand_interaction.md#L697-L712) (item 7)
+*   **Affected Scope:** [Lines 697-712](../../hand_interaction.md#L697-L712) (item 7)
 *   **Discrepancy Description:** `docs/protocol.md:3` says the file is frozen from day 2 and that any change bumps `v`. Item 7 adds fields but keeps `v: 1`.
 *   **Rationale:** The implementer would have to settle a project rule.
 *   ***AI Suggestion:*** PROPOSE FIX
@@ -354,7 +354,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
 *   ***Proposed Edit:*** Replace the L710-711 bullet with: "La línea 3 pasa a ser: "**Se congela el día 2.** Agregar un campo opcional no sube `v`, porque cada lado ignora los campos que no conoce. Cambiar o quitar un campo sí: se sube `v` y se cambian Python y el navegador en el mismo commit."" Change L712 "**Por qué**" to: "E2, y deja escrita la regla que permite no subir `v`."
 
 ### [Issue 12] [`implementation-readiness` IR-M5; `codebase-details` CD-M4, CD-N7; `style` ST-M6; `design` D-N3, D-N5, D-M5] - Severity: Medium
-*   **Affected Scope:** [Lines 310-316](docs/designs/hand_interaction.md#L310-L316), [L743-744](docs/designs/hand_interaction.md#L743-L744), [L760-784](docs/designs/hand_interaction.md#L760-L784)
+*   **Affected Scope:** [Lines 310-316](../../hand_interaction.md#L310-L316), [L743-744](../../hand_interaction.md#L743-L744), [L760-784](../../hand_interaction.md#L760-L784)
 *   **Discrepancy Description:** Several browser details are wrong or missing:
     *   `#hint` "centrado abajo" overlaps `#combat` (`style.css:33`).
     *   The E3 block is guarded by `h?.box && pose.ok`, so `pass` never decays back to 0.
@@ -373,7 +373,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
     *   L310-312: replace "con la misma cuenta que `project` (`main.js:88`)" with "con la proyección de `project` (`main.js:84-89`) partiendo de la posición de mundo".
 
 ### [Issue 13] [`style` ST-M2 (S7), ST-M7 (S9); `zoom-out` Z8-8] - Severity: Medium
-*   **Affected Scope:** [Lines 75-88](docs/designs/hand_interaction.md#L75-L88) (G3, G4) and [L911-915](docs/designs/hand_interaction.md#L911-L915)
+*   **Affected Scope:** [Lines 75-88](../../hand_interaction.md#L75-L88) (G3, G4) and [L911-915](../../hand_interaction.md#L911-L915)
 *   **Discrepancy Description:** The G3 and G4 criteria name no tester count and no pass threshold. G3's title promises "sin mirar la pantalla", but the criterion never tests it.
 *   **Rationale:** As written, neither criterion can be checked.
 *   ***AI Suggestion:*** PROPOSE FIX
@@ -385,7 +385,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
     *   Mirror both criteria in Verification steps 4 and 5.
 
 ### [Issue 14] [`style` ST-M3 (S7), ST-M1 (S9)] - Severity: Medium
-*   **Affected Scope:** [L96-98](docs/designs/hand_interaction.md#L96-L98), [L327-329](docs/designs/hand_interaction.md#L327-L329), [L530-531](docs/designs/hand_interaction.md#L530-L531), [L751](docs/designs/hand_interaction.md#L751), [L806-807](docs/designs/hand_interaction.md#L806-L807), [L818-819](docs/designs/hand_interaction.md#L818-L819), [L827](docs/designs/hand_interaction.md#L827)
+*   **Affected Scope:** [L96-98](../../hand_interaction.md#L96-L98), [L327-329](../../hand_interaction.md#L327-L329), [L530-531](../../hand_interaction.md#L530-L531), [L751](../../hand_interaction.md#L751), [L806-807](../../hand_interaction.md#L806-L807), [L818-819](../../hand_interaction.md#L818-L819), [L827](../../hand_interaction.md#L827)
 *   **Discrepancy Description:** G7 asks for one phrase for the gesture, but the doc uses five versions of it. Separately, `hand.pinch` keeps its old name but now means "gesture closed".
 *   **Rationale:** The doc breaks its own goal.
 *   ***AI Suggestion:*** PROPOSE FIX
@@ -396,7 +396,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
     *   §5 L256: append "El nombre queda por compatibilidad con el protocolo v1."
 
 ### [Issue 15] [`style` ST-M1, ST-M5, ST-M6 (S7), ST-M5 (S9); `comprehension` S6#3, S6#12; `design` D-N2, D-N6; `codebase-details` CD-N8; `zoom-out` Z5-7, Z8-6] - Severity: Medium
-*   **Affected Scope:** [L41-44](docs/designs/hand_interaction.md#L41-L44), [L52-53](docs/designs/hand_interaction.md#L52-L53), [L198](docs/designs/hand_interaction.md#L198), [L300-316](docs/designs/hand_interaction.md#L300-L316), [L421](docs/designs/hand_interaction.md#L421), [L867-870](docs/designs/hand_interaction.md#L867-L870), [L885-887](docs/designs/hand_interaction.md#L885-L887)
+*   **Affected Scope:** [L41-44](../../hand_interaction.md#L41-L44), [L52-53](../../hand_interaction.md#L52-L53), [L198](../../hand_interaction.md#L198), [L300-316](../../hand_interaction.md#L300-L316), [L421](../../hand_interaction.md#L421), [L867-870](../../hand_interaction.md#L867-L870), [L885-887](../../hand_interaction.md#L885-L887)
 *   **Discrepancy Description:** Several claims are false or overstated:
     *   L43 "~4 cm" contradicts OQ4.
     *   "Sin bajar el brillo" contradicts the opacity drop, and the shader's average brightness also drops (`hologram.js:36`).
@@ -420,18 +420,18 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
     *   L885-887: "**Por qué**: `pass` se compone con la opacidad que ya existe en vez de pisarla. El tracking (`main.js:102`) y la muerte (`events.js:51`) siguen escribiendo los dos en `baseOpacity`, como hoy."
 
 ### [Issue 16] [`structural` S-2, S-5] - Severity: Medium
-*   **Affected Scope:** [Lines 483-506](docs/designs/hand_interaction.md#L483-L506)
+*   **Affected Scope:** [Lines 483-506](../../hand_interaction.md#L483-L506)
 *   **Discrepancy Description:** "Additional Resources" and "Cambios respecto del brief" are H3s nested under Alternatives. The cited files are written as plain code text, not links.
 *   **Rationale:** A table of contents misfiles them, and readers have to find the sources themselves.
 *   ***AI Suggestion:*** PROPOSE FIX
 *   ***Justification:*** Valid, and it is the root cause of Issue 10: the reviewers couldn't find the brief.
 *   ***Proposed Edit:*** Change both headings to `##`. Turn the bullets into links:
-    *   `[hand_interaction_brief.md](../../hand_interaction_brief.md)`
-    *   `[concepts_brief.md](../../concepts_brief.md)`
-    *   `[dejarik_ar.md](dejarik_ar.md)`
+    *   `[hand_interaction_brief.md](../../../briefs/hand_interaction_brief.md)`
+    *   `[concepts_brief.md](../../../briefs/concepts_brief.md)`
+    *   `[dejarik_ar.md](../../dejarik_ar.md)`
 
 ### [Issue 17] [`codebase-details` CD-M5; `implementation-readiness` IR-N9] - Severity: Medium
-*   **Affected Scope:** [Lines 826-830](docs/designs/hand_interaction.md#L826-L830) (item 16)
+*   **Affected Scope:** [Lines 826-830](../../hand_interaction.md#L826-L830) (item 16)
 *   **Discrepancy Description:** `demo_script.md` has no row for "the first time the host uses the hand", and the new fallback row is missing columns.
 *   **Rationale:** The implementer would have to choose the row.
 *   ***AI Suggestion:*** PROPOSE FIX
@@ -439,7 +439,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
 *   ***Proposed Edit:*** L826-827: "En la fila 0:20–1:10, después de "el anfitrión mueve", agregar: "con la mano; el narrador dice: "Apuntá con el índice y juntá dos dedos"". L828-830: "En la tabla de respaldos (línea 38), una fila: `| El gesto da confirmaciones falsas | Pasar al plan B y reiniciar | \`gesture = "dwell"\` en \`config.toml\` | — |`."
 
 ### [Issue 18] [`design` D-M4; `zoom-out` Z8-3] - Severity: Medium
-*   **Affected Scope:** [Lines 250-253](docs/designs/hand_interaction.md#L250-L253)
+*   **Affected Scope:** [Lines 250-253](../../hand_interaction.md#L250-L253)
 *   **Discrepancy Description:** The browser infers "cancel" from sampled `hold` values. That is fragile on the 15 fps remote, so the reviewer asks for an explicit `result` field or an attempt counter.
 *   **Rationale:** A false or missed cancel sound.
 *   ***AI Suggestion:*** CONTEST
@@ -447,7 +447,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
 *   ***Proposed Edit:*** none.
 
 ### [Issue 19] [`zoom-out` Z5-5] - Severity: Low
-*   **Affected Scope:** [Lines 864-867](docs/designs/hand_interaction.md#L864-L867)
+*   **Affected Scope:** [Lines 864-867](../../hand_interaction.md#L864-L867)
 *   **Discrepancy Description:** `sin(uTime * (37 + 40·uPass))` changes the frequency while `uPass` fades. Because `uTime` grows over the session, this sweeps the phase by thousands of radians and gives chaotic flicker.
 *   **Rationale:** A visible glitch on every fade.
 *   ***AI Suggestion:*** PROPOSE FIX
@@ -455,7 +455,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
 *   ***Proposed Edit:*** Change the formula to `float flicker = 1.0 - (uFlicker + 0.35 * uPass) * (0.5 + 0.5 * sin(uTime * 37.0) * sin(uTime * 13.0));`, and change L867 to "`uPass` sube la amplitud del parpadeo. La frecuencia no cambia, porque cambiarla con `uTime` grande hace saltar la fase."
 
 ### [Issue 20] [`zoom-out` Z5-6; `comprehension` S6#10; `implementation-readiness` IR-N1, IR-N8] - Severity: Low
-*   **Affected Scope:** [L317-320](docs/designs/hand_interaction.md#L317-L320), [L738-742](docs/designs/hand_interaction.md#L738-L742), [L766-770](docs/designs/hand_interaction.md#L766-L770)
+*   **Affected Scope:** [L317-320](../../hand_interaction.md#L317-L320), [L738-742](../../hand_interaction.md#L738-L742), [L766-770](../../hand_interaction.md#L766-L770)
 *   **Discrepancy Description:** The ring offset is "~60 px del cuadro" at L319 but "(+40, -40)" px of `#stage` at L770, and the anchor is unspecified. Z5-6 also asks to drop the cosmetic constants in favour of constraints.
 *   **Rationale:** The two values contradict each other.
 *   ***AI Suggestion:*** PROPOSE FIX (and contest dropping the constants)
@@ -463,7 +463,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
 *   ***Proposed Edit:*** L318-319: "…más un corrimiento fijo arriba a la derecha (ítem 12) para que el dedo no lo tape." L770: "El centro del `<div>` va ahí más `(+40, −40)` px de `#stage` (`left = x + 40 − 22`, `top = y − 40 − 22`), con `style.setProperty("--p", hold)`." L739-740: specify the mask as `mask: radial-gradient(circle, transparent 55%, #000 57%)`. L796: "`strokeStyle = "rgba(255,255,255,0.5)"`", and the metric in the debug line uses `toFixed(2)`.
 
 ### [Issue 21] [`comprehension` S6#11, S6#15; `style` ST-N4] - Severity: Low
-*   **Affected Scope:** [L71](docs/designs/hand_interaction.md#L71), [L168](docs/designs/hand_interaction.md#L168), [L247](docs/designs/hand_interaction.md#L247)
+*   **Affected Scope:** [L71](../../hand_interaction.md#L71), [L168](../../hand_interaction.md#L168), [L247](../../hand_interaction.md#L247)
 *   **Discrepancy Description:** `hand.px` is never defined, and "un radio" in G2 is ambiguous.
 *   **Rationale:** A reader has to guess both.
 *   ***AI Suggestion:*** PROPOSE FIX
@@ -471,7 +471,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
 *   ***Proposed Edit:*** G2 L70-71: "…La casilla queda fijada al empezar, y el gesto se cancela si la punta del índice se aleja más de `cancel_radius_mm` (20 mm) del punto donde se fijó." §5, after the JSON: "`px`: la punta del índice (`lm2d[8]`) en píxeles del cuadro, o `null` sin mano."
 
 ### [Issue 22] [`structural` S-7, S-9; `codebase-details` CD-N6; `style` ST-N6 (S9)] - Severity: Low
-*   **Affected Scope:** [L246](docs/designs/hand_interaction.md#L246), [L85](docs/designs/hand_interaction.md#L85), [L638-639](docs/designs/hand_interaction.md#L638-L639)
+*   **Affected Scope:** [L246](../../hand_interaction.md#L246), [L85](../../hand_interaction.md#L85), [L638-639](../../hand_interaction.md#L638-L639)
 *   **Discrepancy Description:** The `json` block doesn't parse, L85 runs past the wrap width, and the TOML ordering rationale is wrong.
 *   **Rationale:** Small, objective errors.
 *   ***AI Suggestion:*** PROPOSE FIX
@@ -479,7 +479,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
 *   ***Proposed Edit:*** L246: change ` ```json ` to ` ```text `. Re-wrap L85 at 80 columns. L638-639, if Issue 3 is rejected: "Las subtablas van después de todas las claves de `[hands]`, porque en TOML una clave después de `[hands.touch]` queda dentro de la subtabla." If Issue 3 is accepted, delete the sentence.
 
 ### [Issue 23] [`style` ST-M2 (S9), ST-N2 (S7)] - Severity: Low
-*   **Affected Scope:** [L76](docs/designs/hand_interaction.md#L76), [L136](docs/designs/hand_interaction.md#L136), [L904-907](docs/designs/hand_interaction.md#L904-L907)
+*   **Affected Scope:** [L76](../../hand_interaction.md#L76), [L136](../../hand_interaction.md#L136), [L904-907](../../hand_interaction.md#L904-L907)
 *   **Discrepancy Description:** "anillo" means both the hold ring and the board rings. "corrido" has three meanings.
 *   **Rationale:** At L904, "10 toques por anillo" can be read as taps on the progress ring.
 *   ***AI Suggestion:*** PROPOSE FIX
@@ -490,7 +490,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
     *   L135-136: "El "~4 cm / ~7,8 cm" del brief no coincide con esto."
 
 ### [Issue 24] [`codebase-details` CD-N2, CD-N5; `implementation-readiness` IR-N3, IR-N4, IR-N5, IR-N6, IR-N7] - Severity: Low
-*   **Affected Scope:** [L771](docs/designs/hand_interaction.md#L771), [L891-893](docs/designs/hand_interaction.md#L891-L893), item 1
+*   **Affected Scope:** [L771](../../hand_interaction.md#L771), [L891-893](../../hand_interaction.md#L891-L893), item 1
 *   **Discrepancy Description:** Small code details:
     *   `import math` is missing.
     *   `dist` clashes with the distortion parameter.
@@ -505,7 +505,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
 *   ***Proposed Edit:*** L771: "**Pista:** `let prevHint = false`; se llama `hud.hint(show)` solo cuando `show = h?.px != null` cambia." L891-893: "`python -c "import sys, dejarik.hands, dejarik.vision; assert 'mediapipe' not in sys.modules"`."
 
 ### [Issue 25] [`implementation-readiness` IR-N10; `codebase-details` CD-N9] - Severity: Low
-*   **Affected Scope:** [Lines 833-854](docs/designs/hand_interaction.md#L833-L854) (items 17, 18)
+*   **Affected Scope:** [Lines 833-854](../../hand_interaction.md#L833-L854) (items 17, 18)
 *   **Discrepancy Description:** `dejarik_ar.md:415, 911` and `concepts_brief.md:98, 296` describe the old `hand` contract, but they are not in the file list.
 *   **Rationale:** They go stale without notice.
 *   ***AI Suggestion:*** PROPOSE FIX
@@ -513,7 +513,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
 *   ***Proposed Edit:*** Item 17 L840: "No se reescribe el resto. Las líneas 415 (esquema de `hand`) y 911 (`debug.pinch_ratio`) quedan viejas a propósito: el aviso de la línea 380 las cubre." Item 18: add "Las líneas 98 y 296 (`hand` viejo) quedan como están, cubiertas por la nota de 160-164."
 
 ### [Issue 26] [`comprehension` S6#13] - Severity: Low
-*   **Affected Scope:** [L105](docs/designs/hand_interaction.md#L105), [L314](docs/designs/hand_interaction.md#L314), [L772](docs/designs/hand_interaction.md#L772), [L922](docs/designs/hand_interaction.md#L922)
+*   **Affected Scope:** [L105](../../hand_interaction.md#L105), [L314](../../hand_interaction.md#L314), [L772](../../hand_interaction.md#L772), [L922](../../hand_interaction.md#L922)
 *   **Discrepancy Description:** Project terms are used without definition: `.dj`, replay, the remote viewer and `you === 1`, `poseAlpha`, the ArUco pointer, and the MediaPipe landmark numbering.
 *   **Rationale:** A fresh reader can't follow them.
 *   ***AI Suggestion:*** DECLINE
@@ -521,7 +521,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
 *   ***Proposed Edit:*** none.
 
 ### [Issue 27] [`structural` S-8, S-12] - Severity: Low
-*   **Affected Scope:** [L144](docs/designs/hand_interaction.md#L144), [L7](docs/designs/hand_interaction.md#L7), [L483](docs/designs/hand_interaction.md#L483), [L506](docs/designs/hand_interaction.md#L506)
+*   **Affected Scope:** [L144](../../hand_interaction.md#L144), [L7](../../hand_interaction.md#L7), [L483](../../hand_interaction.md#L483), [L506](../../hand_interaction.md#L506)
 *   **Discrepancy Description:** "Dónde vive cada cosa" is unnumbered, and horizontal rules are used inconsistently.
 *   **Rationale:** Formatting.
 *   ***AI Suggestion:*** DECLINE
@@ -544,7 +544,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
 *   ***Proposed Edit:*** none.
 
 ### [Issue 29] [`zoom-out` Z5-4] - Severity: Low
-*   **Affected Scope:** [Lines 234-242](docs/designs/hand_interaction.md#L234-L242)
+*   **Affected Scope:** [Lines 234-242](../../hand_interaction.md#L234-L242)
 *   **Discrepancy Description:** The suggestion is to use `OneEuro` on `lm2d[8]` instead of the 3-frame debounce, or to drop the debounce if measurement shows it isn't needed.
 *   **Rationale:** Reuse of an existing filter.
 *   ***AI Suggestion:*** DECLINE
@@ -552,7 +552,7 @@ Totals: 24 PROPOSE FIX (one needs your decision: Issue 3), 1 CONTEST, 0 ESCALATE
 *   ***Proposed Edit:*** none.
 
 ### [Issue 30] [`design` D-N9; `zoom-out` Z8-7] - Severity: Low
-*   **Affected Scope:** [Lines 179-185](docs/designs/hand_interaction.md#L179-L185)
+*   **Affected Scope:** [Lines 179-185](../../hand_interaction.md#L179-L185)
 *   **Discrepancy Description:** There is no frame-time budget for the hand thread.
 *   **Rationale:** The claim of no added inference cost is unsupported.
 *   ***AI Suggestion:*** DECLINE

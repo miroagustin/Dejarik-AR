@@ -34,7 +34,7 @@ Etapas y fechas:
 *   **E3:** "se deja atravesar".
 *   **E4:** oclusión real, opcional.
 *   **El control** es el control 2 del plan general (días 14-16,
-    [concepts_brief.md](../../concepts_brief.md)), entre el 16 y el 18/11.
+    [concepts_brief.md](../briefs/concepts_brief.md)), entre el 16 y el 18/11.
     Ahí los 5 integrantes del equipo miden E1-E3 contra E0.
 *   E4 solo entra si E1-E3 cierran antes del **18/11**. El congelamiento es el
     **20/11/2026** y la demo el **26/11/2026**.
@@ -393,7 +393,7 @@ plan (`hand.box`) sirve para medir el desfase sin agregar nada más.
 Las alternativas A a J salen de la tabla "Alternatives Weighed" del brief. De
 la K a la N se descartaron mientras se escribía este draft. Todas las
 decisiones son del autor y están registradas en
-[hand_interaction_brief.md](../../hand_interaction_brief.md). Abajo va el motivo
+[hand_interaction_brief.md](../briefs/hand_interaction_brief.md). Abajo va el motivo
 técnico de cada una.
 
 ### Elegir la casilla
@@ -539,9 +539,9 @@ técnico de cada una.
 
 ## Additional Resources
 
-*   [hand_interaction_brief.md](../../hand_interaction_brief.md): el brief de
+*   [hand_interaction_brief.md](../briefs/hand_interaction_brief.md): el brief de
     este design (2026-11-06).
-*   [concepts_brief.md](../../concepts_brief.md): el brief general (Non-Goal de
+*   [concepts_brief.md](../briefs/concepts_brief.md): el brief general (Non-Goal de
     oclusión en la línea 328, plan de 20 días).
 *   [dejarik_ar.md](dejarik_ar.md): el design general (sección "Mano y
     pinch").
