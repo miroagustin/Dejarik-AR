@@ -75,7 +75,7 @@ justifica como tal.
 *   **G3. Movimiento stop-motion:** el mixer avanza de a pasos de unos 12 fps en
     todas las criaturas.
 *   **G4. La vida se puede leer sin que la tape el debug,** con el tracking
-    funcionando y con la imagen espejada (`#stage.mirror`). Ver el control del
+    funcionando y con la imagen espejada (`#stage.mirror-x` y `mirror-y`). Ver el control del
     commit 3.
 *   **G5. Los tiempos no cambian para el jugador:** por cada evento, el cliente
     anima y responde `anim_done`; el servidor espera hasta 5 s
@@ -351,7 +351,7 @@ Ver A1-A5.
 
 *   **Etiqueta solo en las dos piezas que pelean.** Fuera de la pelea no se ve
     la vida de nadie. Necesita proyección por cuadro en `#hud` con la x
-    espejada a mano, porque `#stage.mirror` daría vuelta el texto
+    espejada a mano, porque el espejo de `#stage` daría vuelta el texto
     (`style.css:19`), y un momento para ocultarla que hoy no existe como
     evento.
 *   **Etiquetas siempre visibles en las 8 piezas.** Con el ángulo de la cámara
@@ -565,8 +565,8 @@ nada.
 *   **Proposed Changes**: en la línea 44, `top: 64px` pasa a `bottom: 18px`.
     `left: 12px` y el resto quedan igual.
 
-**Control del commit 3:** con el debug encendido (tecla D), y con el espejo
-encendido y apagado (tecla F), el roster no se pisa con el texto de estado
+**Control del commit 3:** con el debug encendido (tecla D), y con el espejo en
+sus 4 combinaciones (tecla F: ninguno, horizontal, vertical, los dos), el roster no se pisa con el texto de estado
 del debug ni con `#role`. Los marcadores del debug y `#errors` pueden taparlo
 (ver Riesgos y mitigaciones).
 

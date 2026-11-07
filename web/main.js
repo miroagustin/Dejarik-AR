@@ -77,23 +77,32 @@ async function runGame() {
     onStatus(text) { hud.notice(text, text === "conectado" ? 1000 : 0); },
   });
 
-  // Espejo (tecla F): solo visual. Se guarda en el navegador.
-  let mirror = localStorage.getItem("mirror") === "1";
-  const setMirror = m => { mirror = m; stage.classList.toggle("mirror", m); debug.setMirror(m); localStorage.setItem("mirror", m ? "1" : "0"); };
+  // Espejo (tecla F): solo visual. Cicla 0 → horizontal → vertical → los dos.
+  // Bit 1 = horizontal, bit 2 = vertical. Se guarda en el navegador ("1" de antes sigue siendo horizontal).
+  const MIRROR_NAMES = ["Espejo desactivado", "Espejo horizontal", "Espejo vertical", "Espejo horizontal y vertical"];
+  let mirror = (Number(localStorage.getItem("mirror")) || 0) & 3;
+  const setMirror = m => {
+    mirror = m;
+    stage.classList.toggle("mirror-x", !!(m & 1));
+    stage.classList.toggle("mirror-y", !!(m & 2));
+    debug.setMirror(!!(m & 1), !!(m & 2));
+    localStorage.setItem("mirror", String(m));
+  };
   setMirror(mirror);
 
   addEventListener("pointerdown", () => audio.unlock());
   glCanvas.addEventListener("click", ev => {
     const r = glCanvas.getBoundingClientRect();
-    const x = mirror ? r.left + r.right - ev.clientX : ev.clientX;
-    const p = view.boardPointFromClick(x, ev.clientY);
+    const x = mirror & 1 ? r.left + r.right - ev.clientX : ev.clientX;
+    const y = mirror & 2 ? r.top + r.bottom - ev.clientY : ev.clientY;
+    const p = view.boardPointFromClick(x, y);
     if (p) net.send({ type: "click", x: p.x, y: p.y });
   });
 
   addEventListener("keydown", ev => {
     audio.unlock();
     if (ev.key.toLowerCase() === "m") { hud.notice(audio.toggleMute() ? "Sonido apagado" : "Sonido encendido"); return; }
-    if (ev.key.toLowerCase() === "f") { setMirror(!mirror); hud.notice(mirror ? "Espejo activado" : "Espejo desactivado"); return; }
+    if (ev.key.toLowerCase() === "f") { setMirror((mirror + 1) % 4); hud.notice(MIRROR_NAMES[mirror]); return; }
     const key = { d: "debug", l: "lock", r: "reset", p: "mode" }[ev.key.toLowerCase()];
     if (!key) return;
     if (key === "debug") debug.toggle();

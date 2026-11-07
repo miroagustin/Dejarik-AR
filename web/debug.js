@@ -3,27 +3,30 @@
 
 export function createDebug(canvas) {
   const ctx = canvas.getContext("2d");
-  let on = false, frames = 0, fps = 0, last = performance.now(), mirror = false, W = 0;
+  let on = false, frames = 0, fps = 0, last = performance.now(), mx = false, my = false, W = 0, H = 0;
 
-  // Con el espejo (#stage.mirror) el canvas se ve dado vuelta: el texto se dibuja
-  // espejado otra vez para que se lea. x es la posición en el cuadro.
-  function textAt(fn, x) {
-    if (!mirror) return fn(x);
-    ctx.save(); ctx.setTransform(-1, 0, 0, 1, W, 0); fn(W - x); ctx.restore();
+  // Con el espejo (#stage.mirror-x / mirror-y) el canvas se ve dado vuelta: el texto se
+  // dibuja espejado otra vez en los mismos ejes para que se lea. (x, y) es la posición en el cuadro.
+  function textAt(fn, x, y) {
+    if (!mx && !my) return fn(x, y);
+    ctx.save();
+    ctx.setTransform(mx ? -1 : 1, 0, 0, my ? -1 : 1, mx ? W : 0, my ? H : 0);
+    fn(mx ? W - x : x, my ? H - y : y);
+    ctx.restore();
   }
 
   function line(text, y) {
     // Arriba a la izquierda de la pantalla, con o sin espejo.
-    textAt(x => {
+    textAt((x, y) => {
       ctx.fillStyle = "rgba(0,0,0,0.6)";
       ctx.fillRect(x - 5, y - 16, ctx.measureText(text).width + 10, 21);
       ctx.fillStyle = "#7fffb0";
       ctx.fillText(text, x, y);
-    }, mirror ? W - 13 : 13);
+    }, mx ? W - 13 : 13, my ? H - y : y);
   }
 
   return {
-    setMirror(m) { mirror = m; },
+    setMirror(x, y) { mx = x; my = y; },
     toggle() { on = !on; canvas.classList.toggle("on", on); return on; },
     get on() { return on; },
 
@@ -34,7 +37,7 @@ export function createDebug(canvas) {
       if (now - last > 500) { fps = (frames * 1000) / (now - last); frames = 0; last = now; }
       if (!on || !header) return;
       const [w, h] = header.size;
-      W = w;
+      W = w; H = h;
       if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
       ctx.clearRect(0, 0, w, h);
       ctx.font = "15px Consolas, monospace";
@@ -49,7 +52,7 @@ export function createDebug(canvas) {
           ctx.closePath();
           ctx.stroke();
           ctx.fillStyle = "#7fffb0";
-          textAt(x => ctx.fillText(String(dbg.ids[i]), x, quad[0][1] - 4), quad[0][0]);
+          textAt((x, y) => ctx.fillText(String(dbg.ids[i]), x, y), quad[0][0], quad[0][1] - 4);
         });
       }
 

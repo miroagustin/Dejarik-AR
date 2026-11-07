@@ -16,7 +16,9 @@ html, body {
 /* El canvas mantiene el aspecto del cuadro; main.js lo centra con bandas negras. */
 #stage { position: absolute; }
 /* Tecla F: espeja video y 3D juntos (solo la vista local; la pose y los clics no cambian). */
-#stage.mirror { transform: scaleX(-1); }
+#stage.mirror-x { transform: scaleX(-1); }
+#stage.mirror-y { transform: scaleY(-1); }
+#stage.mirror-x.mirror-y { transform: scale(-1, -1); }
 #gl, #debug { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
 #debug { pointer-events: none; display: none; }
 #debug.on { display: block; }
