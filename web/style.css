@@ -44,7 +44,24 @@ html, body {
 #turn { top: 12px; left: 50%; transform: translateX(-50%); font-size: 26px; letter-spacing: 2px; }
 #role { top: 12px; left: 12px; font-size: 15px; }
 #roster { bottom: 18px; left: 12px; font-size: 14px; line-height: 1.5; }
-#combat { bottom: 18px; left: 50%; transform: translateX(-50%); font-size: 20px; }
+/* Panel de combate: a la derecha y a media altura, para no tapar las criaturas, el turno ni el hint. */
+/* Dos columnas iguales con el "vs" en el medio exacto; todo centrado. Escala de espacios de 4 px. */
+#hud > #combat { display: none; right: 16px; top: 50%; transform: translateY(-50%); padding: 16px 20px; text-align: center; font-size: 18px; }
+#hud > #combat.on { display: block; }
+#combat .sides { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; column-gap: 12px; }
+#combat .side { display: grid; justify-items: center; row-gap: 8px; min-width: 150px; transition: opacity 0.3s; }
+#combat .side.lost { opacity: 0.4; }
+#combat .who { font-size: 16px; letter-spacing: 0.5px; }
+#combat .die { font-size: 72px; line-height: 1; font-family: "Segoe UI Symbol", "DejaVu Sans", sans-serif; }
+#combat.rolling .die { animation: roll 0.25s linear infinite; }
+#combat .sum { font-variant-numeric: tabular-nums; }
+#combat .sum b { font-size: 26px; }
+#combat .vs { color: #cdefff; opacity: 0.6; }
+#combat .outcome { margin-top: 16px; min-height: 3.2em; display: grid; row-gap: 4px; }
+#combat .word { font-size: 26px; letter-spacing: 2px; color: #ffd36b; }
+#combat .loss { font-size: 18px; }
+@keyframes roll { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { #combat.rolling .die { animation: none; } }
 #hint { bottom: 64px; left: 50%; transform: translateX(-50%); font-size: 16px; }
 #notice { top: 60px; left: 50%; transform: translateX(-50%); font-size: 18px; color: #ffd36b; }
 #remote { top: 12px; right: 12px; font-size: 13px; max-width: 40%; word-break: break-all; pointer-events: auto; }

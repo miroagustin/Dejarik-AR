@@ -93,7 +93,7 @@ La casilla `12+k` queda detrás de la `k`. La geometría está en [board_spec.js
 
 ```json
 {"v":1,"type":"events","events":[
- {"id":17,"kind":"attack","piece":1,"to":18,"result":{"atk_roll":5,"def_roll":2,"outcome":"hit"}},
+ {"id":17,"kind":"attack","piece":1,"to":18,"result":{"atk_roll":5,"def_roll":2,"atk":3,"def":3,"outcome":"hit"}},
  {"id":18,"kind":"hit","piece":5,"result":{"hp":1}},
  {"id":19,"kind":"turn","result":{"turn":1}}]}
 ```
@@ -101,7 +101,7 @@ La casilla `12+k` queda detrás de la `k`. La geometría está en [board_spec.js
 | `kind` | Campos |
 |---|---|
 | `move` | `piece`, `from`, `to` |
-| `attack` | `piece`, `to`, `result: {atk_roll, def_roll, outcome: "hit"\|"counter"\|"tie"}` |
+| `attack` | `piece`, `to`, `result: {atk_roll, def_roll, atk, def, outcome: "hit"\|"counter"\|"tie"}`. `atk` y `def` son los bonus del atacante y del defensor, para que el HUD muestre la cuenta sin copiar la tabla de `game.py`. |
 | `hit` | `piece` (la que perdió vida), `result: {hp}` |
 | `death` | `piece`, `from` |
 | `turn` | `result: {turn}` |

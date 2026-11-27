@@ -1,25 +1,23 @@
 # Guion de la demo (26/11, por Teams)
 
-> Borrador del día 2. Los tiempos de los respaldos se miden en los ensayos de los días 19, 21 y 23 y se completan acá.
+> La demo es solo **contra la PC** (modo `cpu`), sin túnel ni jugador remoto: no depende de la red. Los tiempos de los respaldos se miden en el ensayo y se completan acá.
 
 ## Roles
 
 | Quién | Qué hace |
 |---|---|
-| **Anfitrión** | Tiene el tablero y la webcam. Corre el juego y comparte la ventana de Chrome en Teams, con "compartir audio del sistema". Juega el bando azul. |
-| **Remoto** | Un integrante desde su casa. Abre el link que el anfitrión pega en el chat de Teams. Juega el bando rojo. |
-| **Narrador** | Explica lo que se ve y lee las reglas de 20 segundos de `docs/rules.md`. |
+| **Anfitrión** | Tiene el tablero y la webcam. Corre el juego y comparte la ventana de Chrome en Teams, con "compartir audio del sistema". Juega el bando azul contra la PC, que juega el rojo. |
+| **Narrador** | Explica lo que se ve, lee las reglas de 20 segundos de `docs/rules.md` y lee en voz alta el panel de combate. |
 | **Respaldo** | Está atento al checklist de abajo y avisa qué tecla o flag usar si algo falla. |
 
 ## Guion (3 minutos)
 
 | Tiempo | Qué se ve |
 |---|---|
-| Antes | El anfitrión corre `python -m dejarik --mode remote` y pega el link en el chat. El remoto ya está conectado. Con `P` se pasa a `cpu`. |
+| Antes | El anfitrión corre `python -m dejarik` (el modo por defecto es `cpu`). |
 | 0:00–0:20 | Arranca la pantalla compartida. Se detecta el tablero, suena el "encendido" y aparecen las 8 criaturas. El narrador lee las reglas. |
-| 0:20–1:10 | Partida **contra la PC**: el anfitrión mueve con la mano; el narrador dice: «Apoyá el índice en una casilla y sostené». La PC responde ("La PC está pensando…") y hay al menos 1 combate con dados. |
-| 1:10–1:20 | Se aprieta `P` dos veces para pasar a **remoto**. El HUD muestra "Jugador 1 conectado". |
-| 1:20–2:20 | Partida **remota**: el integrante desde su casa mueve las rojas y hay al menos 1 combate más. |
+| 0:20–1:20 | Partida **contra la PC**. El anfitrión mueve con la mano y el narrador dice: «Apoyá el índice en una casilla y sostené». La PC responde ("La PC está pensando…"). El objetivo es acercar las criaturas hasta que haya un combate. |
+| 1:20–2:20 | **Combates.** Tiene que haber al menos 2. A la derecha aparece el panel con los dos dados girando. Cuando caen, el narrador lee la cuenta («la Bestia saca 5 más 3 de ataque, 8; el Guardián saca 2 más 3 de defensa, 5») y el resultado: golpe, contragolpe o empate, y quién pierde la vida. |
 | 2:20–2:40 | El anfitrión mete la mano y tapa marcadores: las criaturas siguen ancladas. |
 | 2:40–3:00 | El anfitrión aprieta `D` para mostrar el **overlay de debug** (marcadores, ejes, grilla reproyectada, fps, error de reproyección). El narrador nombra las técnicas de clase. |
 
@@ -30,7 +28,6 @@
 - [ ] Lámpara para iluminar el tablero de forma pareja, sin reflejos.
 - [ ] Tablero pegado sobre foamboard, más un tablero de repuesto.
 - [ ] `calib.npz` hecho con esta webcam y esta resolución.
-- [ ] `tools/bin/cloudflared.exe` presente, y que no exista `%USERPROFILE%\.cloudflared\config.yml`.
 - [ ] Teams con "compartir audio del sistema" activado. Probar que la ventana siga andando cuando Teams la tapa.
 - [ ] El MP4 de respaldo en el escritorio.
 - [ ] Ensayo completo hecho ese mismo día.
@@ -41,7 +38,6 @@
 |---|---|---|---|
 | La mano no responde | Seguir con el mouse | `--input mouse`, o simplemente usar el mouse | — |
 | La mano confirma sin querer | Subir el tiempo de sostén y reiniciar | `hold_ms` en `[hands]` de `config.toml` | — |
-| El remoto se cae o el túnel no levanta | Pasar a local o contra la PC | `P` | — |
 | El tracking tiembla por la luz | Bloquear la pose | `L` | — |
 | Python se cuelga | Relanzarlo con el estado guardado (Chrome se reconecta solo) | `python -m dejarik --resume` | — |
 | La cámara no funciona | Reproducir la sesión grabada y jugar con el mouse | `--replay recordings/<sesion>.dj` | — |

@@ -27,7 +27,7 @@ async function runGame() {
   const view = createScene(glCanvas, spec);
   const models = await loadKinds();
   const army = new Army(view.boardY, models, spec);
-  const hud = createHud();
+  const hud = createHud({ boardRect: () => boardRect() });
   const debug = createDebug(document.getElementById("debug"));
   const audio = createAudio();
 
@@ -117,6 +117,25 @@ async function runGame() {
     return [(v.x + 1) / 2 * w, (1 - v.y) / 2 * h];
   };
   const project = (x, y, z) => toPx(new THREE.Vector3(x, y, z).applyMatrix4(view.board.matrix));
+
+  // Rectángulo que ocupan en la ventana el tablero y las criaturas paradas encima, o null sin pose.
+  // Se muestrea el borde exterior al ras y a la altura de las criaturas (CREATURE_H, en metros).
+  const CREATURE_H = 0.05;
+  function boardRect() {
+    if (!lastHeader?.pose.ok) return null;
+    const st = stage.getBoundingClientRect(), s = st.width / lastHeader.size[0];
+    const b = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
+    for (let i = 0; i < 24; i++) for (const z of [0, CREATURE_H]) {
+      const a = i * Math.PI / 12, p = project(spec.radii_m.r2 * Math.cos(a), spec.radii_m.r2 * Math.sin(a), z);
+      if (!p) continue;
+      // El espejo (tecla F) da vuelta lo que se ve, así que el rectángulo también.
+      const x = st.left + (mirror & 1 ? st.width - p[0] * s : p[0] * s);
+      const y = st.top + (mirror & 2 ? st.height - p[1] * s : p[1] * s);
+      b.x0 = Math.min(b.x0, x); b.x1 = Math.max(b.x1, x);
+      b.y0 = Math.min(b.y0, y); b.y1 = Math.max(b.y1, y);
+    }
+    return b.x0 < Infinity ? b : null;
+  }
 
   // Gesto de la mano: anillo de carga, sonidos y pista. Todo sale de header.hand.
   const ring = document.getElementById("hold-ring");

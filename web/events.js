@@ -20,8 +20,7 @@ export function createEventQueue({ army, spec, hud, audio, onDone }) {
     async attack(e) {
       const c = army.get(e.piece);
       audio.play("dice");
-      await new Promise(r => setTimeout(r, 550)); // que se escuche el dado antes del resultado
-      hud.combat(e);
+      await hud.combat(e); // los dados giran y caen antes de que pegue nadie
       if (!c) return;
       c.face(...cellCenter(spec, e.to));
       // el defensor mira al atacante

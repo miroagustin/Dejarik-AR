@@ -114,9 +114,10 @@ def apply(state, action):
         rng.setstate(s.rng_state)
         a, d = rng.randint(1, 6), rng.randint(1, 6)
         s.rng_state = rng.getstate()
-        outcome = "hit" if a + KINDS[me.kind]["atk"] > d + KINDS[here.kind]["def"] else \
-            "counter" if a + KINDS[me.kind]["atk"] < d + KINDS[here.kind]["def"] else "tie"
-        ev("attack", piece=me.id, to=cell, result={"atk_roll": a, "def_roll": d, "outcome": outcome})
+        atk, dfn = KINDS[me.kind]["atk"], KINDS[here.kind]["def"]
+        outcome = "hit" if a + atk > d + dfn else "counter" if a + atk < d + dfn else "tie"
+        ev("attack", piece=me.id, to=cell,
+           result={"atk_roll": a, "def_roll": d, "atk": atk, "def": dfn, "outcome": outcome})
         loser = {"hit": here, "counter": me}.get(outcome)
         if loser:
             loser.hp -= 1

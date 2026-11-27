@@ -45,7 +45,8 @@ def test_combat_outcomes():
     for outcome in ("hit", "counter", "tie"):
         s, s2, ev = find_seed(outcome)
         r = ev[0]["result"]
-        a, d = r["atk_roll"] + KINDS["bestia"]["atk"], r["def_roll"] + KINDS["bestia"]["def"]
+        assert (r["atk"], r["def"]) == (KINDS["bestia"]["atk"], KINDS["bestia"]["def"])
+        a, d = r["atk_roll"] + r["atk"], r["def_roll"] + r["def"]
         assert (a > d, a < d, a == d)[("hit", "counter", "tie").index(outcome)]
         kinds = [e["kind"] for e in ev]
         if outcome == "tie":
