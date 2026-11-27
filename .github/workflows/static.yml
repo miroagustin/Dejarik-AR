@@ -33,11 +33,12 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
+      - name: Prepare standalone demo
+        run: install -D -m 644 'Dejarik AR.html' _site/index.html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload the static site
-          path: 'web'
+          path: '_site'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
